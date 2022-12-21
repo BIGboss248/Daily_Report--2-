@@ -189,3 +189,5 @@ Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
 
 print(final_report(Platts_Daily_Report_String, indexes,
       4, ['Commdity', 'Price', 'Change', 'Change %']))
+
+#this is a github repository first commit to learn github :)
