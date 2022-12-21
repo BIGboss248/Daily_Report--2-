@@ -117,21 +117,21 @@ Platts_Daily_Report_File.close()
 indexes = {'IODEX 62% Fe CFR North China': 'IODBZ00',
            '65% Fe CFR North China': 'IOPRM00',
            '58% Fe CFR North China': 'IODFE00'}
-# index 0-2
+# index 0-3
 lump = {'Lump outright': 'IOCLS00'}
-# index 0-2
+# index 0-3
 pellet = {'Weekly CFR China 65% Fe': 'IOBFC04',
           'Daily CFR China 63% Fe spot fixed price assessment': 'IOCQR04',
           'Atlantic Basin 65% Fe Blast Furnace pellet FOB': 'SB01095',
           'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)': 'IODBP00'}
-# index 0-2
+# index 0-3
 ore_brands = {'Pilbara Blend Fines (PBF) CFR Qingdao': 'IOPBQ00',
               'Brazilian Blend Fines (BRBF) CFR Qingdao': 'IOBBA00',
               'Newman High Grade Fines (NHGF) CFR Qingdao': 'IONHA00',
               'Mining Area C Fines (MACF) CFR Qingdao': 'IOMAA00',
               'Jimblebar Fines (JMBF) CFR Qingdao': 'IOJBA00',
               '57% Fe Yandi Fines (YDF) CFR Qingdao': 'IOJBA00'}
-# index 0-2
+# index 0-3
 Asia_Pacific_coking_coal = {'HCC Peak Downs Region FOB Australia': 'HCCGA00',
                             'HCC Peak Downs Region CFR China': 'HCCGC00',
                             'HCC Peak Downs Region CFR India': 'HCCGI00',
@@ -189,5 +189,26 @@ Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
 
 df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
                                        4, ['Commodity', 'Price', 'Change', 'Change %']))
-                                       
-df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump,3,['Commodity','Price','Change']))
+
+df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump, 3, [
+                       'Commodity', 'Price', 'Change']))
+
+df_pellet = pd.DataFrame(final_report(
+    Platts_Daily_Report_String, pellet, 3, ['Commodity', 'Price', 'Change']))
+
+df_ore_brands = pd.DataFrame(final_report(
+    Platts_Daily_Report_String, ore_brands, 3, ['Commodity', 'Price', 'Change']))
+
+df_Asia_Pacific_coking_coal = pd.DataFrame(final_report(
+    Platts_Daily_Report_String, Asia_Pacific_coking_coal, 3, ['Commodity', 'Price', 'Change']))
+
+df_Asia_Pacific_brand_relativities_Premium_Low_Vol = pd.DataFrame(final_report(
+    Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Premium_Low_Vol, 2, ['Commodity', 'Price']))
+
+df_Asia_Pacific_brand_relativities_Low_Vol_HCC = pd.DataFrame(final_report(
+    Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Low_Vol_HCC, 2, ['Commodity', 'Price']))
+
+# df_Dry_bulk_freight_assessments = pd.DataFrame(final_report(
+    Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, ['Commodity', 'Price', 'Change']))
+
+print(df_Dry_bulk_freight_assessments)
