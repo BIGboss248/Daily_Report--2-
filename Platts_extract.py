@@ -12,13 +12,14 @@ def find_commodity_price_row(Platts_String: str, commodity_symbol: str):
     """ Finds the row corosponding to the commodity inside the daily report and returns a re.match"""
     # the pattern is based on the symbol so in the program what the  function will recive is the symbol
     # corosponding to the needed commodity
-    pattern = re.compile(rf'{commodity_symbol}\s+\d+.+')
-    matches = re.search(pattern=pattern, string=Platts_String)
+    pattern = rf'{commodity_symbol}\s+\d+.+'
+    compiled_pattern = re.compile(pattern)
+    matches = re.search(pattern=compiled_pattern, string=Platts_String)
     return matches
 
 
 def extract_numbers(Platts_String: str, commodity_symbol: str):
-    """gets the file  and commodity symbol and uses the find_commodity_price_row gets the row of the commodity inside the daily report and 
+    """gets the file  and commodity symbol and uses the find_commodity_price_row gets the row of the commodity inside the daily report and
     removes the name symbol and spaces of the row and retruns a list of floats containing only the numbers meaning prices and changes"""
     out_match = find_commodity_price_row(Platts_String, commodity_symbol)
     # creating a list of english letters to remove the name and symbol
@@ -51,7 +52,7 @@ def extract_numbers(Platts_String: str, commodity_symbol: str):
 
 
 def generate_report(Platts_String: str, commodity: dict):
-    """ taking the generated string from reading platts file and taking a list of required commodity information and Using 
+    """ taking the generated string from reading platts file and taking a list of required commodity information and Using
     1-find_commodity_price_row 2-extract_numbers it generates a list of lists containing commodity name, price and changes """
     result = []
     for i in list(commodity.keys()):
@@ -112,26 +113,20 @@ Platts_Daily_Report_String = Platts_Daily_Report_File.read()
 Platts_Daily_Report_File.close()
 
 # list of commoditys
-
-# index 0-4
 indexes = {'IODEX 62% Fe CFR North China': 'IODBZ00',
            '65% Fe CFR North China': 'IOPRM00',
            '58% Fe CFR North China': 'IODFE00'}
-# index 0-3
 lump = {'Lump outright': 'IOCLS00'}
-# index 0-3
 pellet = {'Weekly CFR China 65% Fe': 'IOBFC04',
           'Daily CFR China 63% Fe spot fixed price assessment': 'IOCQR04',
           'Atlantic Basin 65% Fe Blast Furnace pellet FOB': 'SB01095',
           'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)': 'IODBP00'}
-# index 0-3
 ore_brands = {'Pilbara Blend Fines (PBF) CFR Qingdao': 'IOPBQ00',
               'Brazilian Blend Fines (BRBF) CFR Qingdao': 'IOBBA00',
               'Newman High Grade Fines (NHGF) CFR Qingdao': 'IONHA00',
               'Mining Area C Fines (MACF) CFR Qingdao': 'IOMAA00',
               'Jimblebar Fines (JMBF) CFR Qingdao': 'IOJBA00',
               '57% Fe Yandi Fines (YDF) CFR Qingdao': 'IOJBA00'}
-# index 0-3
 Asia_Pacific_coking_coal = {'HCC Peak Downs Region FOB Australia': 'HCCGA00',
                             'HCC Peak Downs Region CFR China': 'HCCGC00',
                             'HCC Peak Downs Region CFR India': 'HCCGI00',
@@ -150,7 +145,6 @@ Asia_Pacific_coking_coal = {'HCC Peak Downs Region FOB Australia': 'HCCGA00',
                             'Semi Soft FOB Australia': 'MCSSA00',
                             'Semi Soft CFR China': 'MCSSC00',
                             'Semi Soft CFR India': 'MCSSI00'}
-# index 0-1
 Asia_Pacific_brand_relativities_Premium_Low_Vol = {'Peak Downs FOB Australia': 'HCPDA00',
                                                    'Peak Downs CFR China': 'MCBAA00',
                                                    'Saraji FOB Australia': 'HCSAA00',
@@ -171,12 +165,10 @@ Asia_Pacific_brand_relativities_Premium_Low_Vol = {'Peak Downs FOB Australia': '
                                                    'Riverside CFR China': 'MCRVR00',
                                                    'GLV FOB Australia': 'HCHCA00',
                                                    'GLV CFR China': 'MCBAF00'}
-# index 0-1
 Asia_Pacific_brand_relativities_Low_Vol_HCC = {'Lake Vermont HCC': 'MCBAN00',
                                                'Carborough Downs': 'MCBAO00',
                                                'Middlemount Coking': 'MCBAP00',
                                                'Poitrel Semi Hard': 'MCBAQ00'}
-# index 0-2
 Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
                                 'Australia-Rotterdam-Capesize': 'CDARN00',
                                 'Australia-China-Panamax': 'CDBFA00',
@@ -209,6 +201,6 @@ df_Asia_Pacific_brand_relativities_Low_Vol_HCC = pd.DataFrame(final_report(
     Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Low_Vol_HCC, 2, ['Commodity', 'Price']))
 
 # df_Dry_bulk_freight_assessments = pd.DataFrame(final_report(
-    Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, ['Commodity', 'Price', 'Change']))
+    # Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, ['Commodity', 'Price', 'Change']))
 
-print(df_Dry_bulk_freight_assessments)
+# print(df_Dry_bulk_freight_assessments)
