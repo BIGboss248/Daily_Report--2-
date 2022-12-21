@@ -79,7 +79,7 @@ def final_report(Platts_String: str, commodity: dict, index: int, headers: list)
             output[i].append(k[j])
         j = j+1
     df_output = pd.DataFrame(output)
-    df_output.set_index('Commdity',inplace=True)
+    df_output.set_index('Commodity', inplace=True)
     return df_output
 
 
@@ -188,7 +188,8 @@ Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
 
 
 df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
-      4, ['Commdity', 'Price', 'Change', 'Change %']))
-df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump,2,['Commodity','Price','Change']))
+                                       4, ['Commodity', 'Price', 'Change', 'Change %']))
+                                       
+df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump,3,['Commodity','Price','Change']))
 
-#this is a github repository first commit to learn github :)
+
