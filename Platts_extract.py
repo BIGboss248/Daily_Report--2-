@@ -192,4 +192,4 @@ df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
                                        
 df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump,3,['Commodity','Price','Change']))
 
-
+sasdasdasd
