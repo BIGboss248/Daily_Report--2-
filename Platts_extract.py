@@ -187,7 +187,8 @@ Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
                                 'US Mobile-Rotterdam-Panamax': 'CDMAR00'}
 
 
-print(final_report(Platts_Daily_Report_String, indexes,
+df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
       4, ['Commdity', 'Price', 'Change', 'Change %']))
+df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump,2,['Commodity','Price','Change']))
 
 #this is a github repository first commit to learn github :)
