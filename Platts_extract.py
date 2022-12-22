@@ -8,20 +8,20 @@ from tkinter import filedialog
 import pandas as pd
 
 
-def find_commodity_price_row(Platts_String: str, commodity_symbol: str):
+def find_commodity_price_row(Platts_String: str, commodity_symbol: str,second_pattern='\s+\d+.+'):
     """ Finds the row corosponding to the commodity inside the daily report and returns a re.match"""
     # the pattern is based on the symbol so in the program what the  function will recive is the symbol
     # corosponding to the needed commodity
-    pattern = rf'{commodity_symbol}\s+\d+.+'
+    pattern = "".join([rf'{commodity_symbol}',second_pattern])
     compiled_pattern = re.compile(pattern)
     matches = re.search(pattern=compiled_pattern, string=Platts_String)
     return matches
 
 
-def extract_numbers(Platts_String: str, commodity_symbol: str):
+def extract_numbers(Platts_String: str, commodity_symbol: str,second_pattern='\s+\d+.+'):
     """gets the file  and commodity symbol and uses the find_commodity_price_row gets the row of the commodity inside the daily report and
     removes the name symbol and spaces of the row and retruns a list of floats containing only the numbers meaning prices and changes"""
-    out_match = find_commodity_price_row(Platts_String, commodity_symbol)
+    out_match = find_commodity_price_row(Platts_String, commodity_symbol,second_pattern)
     # creating a list of english letters to remove the name and symbol
     alphabet = list(string.ascii_letters)
     # extracting the string from re,match and turning it into a list of strings
@@ -51,20 +51,20 @@ def extract_numbers(Platts_String: str, commodity_symbol: str):
     return in_list
 
 
-def generate_report(Platts_String: str, commodity: dict):
+def generate_report(Platts_String: str, commodity: dict,second_pattern='\s+\d+.+'):
     """ taking the generated string from reading platts file and taking a list of required commodity information and Using
     1-find_commodity_price_row 2-extract_numbers it generates a list of lists containing commodity name, price and changes """
     result = []
     for i in list(commodity.keys()):
-        numbers = extract_numbers(Platts_String, commodity[i])
+        numbers = extract_numbers(Platts_String, commodity[i],second_pattern)
         numbers.insert(0, i)
         result.append(numbers)
     return (result)
 
 
-def final_report(Platts_String: str, commodity: dict, index: int, headers: list):
+def final_report(Platts_String: str, commodity: dict, index: int, headers: list,second_pattern='\s+\d+.+'):
     """Using generate_report it takes the output list and extracts the numbers we need plus adding the headers for pandas data farme"""
-    report = generate_report(Platts_String, commodity)
+    report = generate_report(Platts_String, commodity,second_pattern)
     result = []
     for i in report:
         temp = []
@@ -171,14 +171,14 @@ Asia_Pacific_brand_relativities_Low_Vol_HCC = {'Lake Vermont HCC': 'MCBAN00',
                                                'Poitrel Semi Hard': 'MCBAQ00'}
 # the added .+ is for the function find_price_row to find the numbers
 # it needs by modifing the regex pattern by changing the commodity symbol
-Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00.+',
-                                'Australia-Rotterdam-Capesize': 'CDARN00.+',
-                                'Australia-China-Panamax': 'CDBFA00.+',
-                                'Australia-India-Panamax': 'CDBFAI0.+',
-                                'USEC-India-Panamax': 'CDBUI00.+',
-                                'USEC-Rotterdam-Panamax': 'CDBUR00.+',
-                                'USEC-Brazil-Panamax': 'CDBUB00.+',
-                                'US Mobile-Rotterdam-Panamax': 'CDMAR00.+'}
+Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
+                                'Australia-Rotterdam-Capesize': 'CDARN00',
+                                'Australia-China-Panamax': 'CDBFA00',
+                                'Australia-India-Panamax': 'CDBFAI0',
+                                'USEC-India-Panamax': 'CDBUI00',
+                                'USEC-Rotterdam-Panamax': 'CDBUR00',
+                                'USEC-Brazil-Panamax': 'CDBUB00',
+                                'US Mobile-Rotterdam-Panamax': 'CDMAR00'}
 
 
 df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
@@ -202,7 +202,7 @@ df_Asia_Pacific_brand_relativities_Premium_Low_Vol = pd.DataFrame(final_report(
 df_Asia_Pacific_brand_relativities_Low_Vol_HCC = pd.DataFrame(final_report(
     Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Low_Vol_HCC, 2, ['Commodity', 'Price']))
 
-# df_Dry_bulk_freight_assessments = pd.DataFrame(final_report(
-    # Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, ['Commodity', 'Price', 'Change']))
+df_Dry_bulk_freight_assessments = pd.DataFrame(final_report(
+    Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, ['Commodity', 'Price', 'Change'],second_pattern='.+'))
 
-# print(df_Dry_bulk_freight_assessments)
+print(df_Dry_bulk_freight_assessments)
