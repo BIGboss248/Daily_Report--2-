@@ -169,8 +169,6 @@ Asia_Pacific_brand_relativities_Low_Vol_HCC = {'Lake Vermont HCC': 'MCBAN00',
                                                'Carborough Downs': 'MCBAO00',
                                                'Middlemount Coking': 'MCBAP00',
                                                'Poitrel Semi Hard': 'MCBAQ00'}
-# the added .+ is for the function find_price_row to find the numbers
-# it needs by modifing the regex pattern by changing the commodity symbol
 Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
                                 'Australia-Rotterdam-Capesize': 'CDARN00',
                                 'Australia-China-Panamax': 'CDBFA00',
