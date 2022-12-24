@@ -126,7 +126,7 @@ indexes = {'IODEX 62% Fe CFR North China': 'IODBZ00',
 lump = {'Lump outright': 'IOCLS00'}
 pellet = {'Weekly CFR China 65% Fe': 'IOBFC04',
           'Daily CFR China 63% Fe spot fixed price assessment': 'IOCQR04',
-          'Atlantic Basin 65% Fe Blast Furnace pellet FOB': 'SB01095',
+          'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil': 'SB01095',
           'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)': 'IODBP00'}
 ore_brands = {'Pilbara Blend Fines (PBF) CFR Qingdao': 'IOPBQ00',
               'Brazilian Blend Fines (BRBF) CFR Qingdao': 'IOBBA00',
@@ -194,6 +194,12 @@ df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump, 3, [
 
 df_pellet = pd.DataFrame(final_report(
     Platts_Daily_Report_String, pellet, 3, ['Commodity', 'Price', 'Change']))
+# Adding the IODEX Price to Premiums
+df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] = df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] + \
+    df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
+df_pellet.loc['Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] = df_pellet.loc[
+    'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
+
 
 df_ore_brands = pd.DataFrame(final_report(
     Platts_Daily_Report_String, ore_brands, 3, ['Commodity', 'Price', 'Change']))
