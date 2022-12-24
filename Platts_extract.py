@@ -7,6 +7,7 @@ import tkinter
 from tkinter import filedialog
 import pandas as pd
 import openpyxl as xl
+from openpyxl import formatting, styles, Workbook
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
@@ -113,6 +114,7 @@ def export_to_excel(excel_file_address: str, dataframe_dict: dict):
         dataframe_dict[dataframe].to_excel(excel_writer, sheet_name=dataframe)
     excel_writer.close()
 
+
 def excel_set_font(excel_file_address: str, font=Font(name='IRNazanin', size=16)):
     """Takes the address of an excel file Adjusts font"""
     wb = xl.load_workbook(excel_file_address)
@@ -123,6 +125,7 @@ def excel_set_font(excel_file_address: str, font=Font(name='IRNazanin', size=16)
                 selected_cell = ws.cell(row=i, column=j)
                 selected_cell.font = font
     wb.save(excel_file_address)
+
 
 def excel_set_alignment(excel_file_address: str, alignment=Alignment(horizontal='center', vertical='center')):
     """Takes the address of an excel file Adjusts alignment"""
@@ -135,11 +138,14 @@ def excel_set_alignment(excel_file_address: str, alignment=Alignment(horizontal=
                 selected_cell.alignment = alignment
     wb.save(excel_file_address)
 
+
 def excel_set_border(excel_file_address: str,
-                 border=Border(left=Side(border_style="thin", color='000000'), 
-                               right=Side(border_style="thin", color='000000'), 
-                               top=Side(border_style="thin", color='000000'), 
-                               bottom=Side(border_style="thin", color='000000'))):
+                     border=Border(left=Side(border_style="thin", color='000000'),
+                                   right=Side(border_style="thin",
+                                              color='000000'),
+                                   top=Side(border_style="thin",
+                                            color='000000'),
+                                   bottom=Side(border_style="thin", color='000000'))):
     """Takes the address of an excel file Adjusts border"""
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
@@ -150,34 +156,37 @@ def excel_set_border(excel_file_address: str,
                 selected_cell.border = border
     wb.save(excel_file_address)
 
-def excel_set_tables(excel_file_address: str,Table_Style = TableStyleInfo(name="TableStyleMedium19")):
+
+def excel_set_tables(excel_file_address: str, Table_Style=TableStyleInfo(name="TableStyleMedium19")):
     """ Takes the address of an excel file and defines Tables with styles"""
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        #Create Table and set a table style
+        # Create Table and set a table style
         tab = Table(displayName=sheet,
                     ref=rf'A1:{string.ascii_uppercase[ws.max_column-1]}{ws.max_row}', tableStyleInfo=Table_Style)
         ws.add_table(tab)
     wb.save(excel_file_address)
 
+
 def excel_set_number_formats(excel_file_address: str):
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        #set the price and change format to currency
-        #we start row from 2 to ignore headers and we set columns 2 and 4 since range() dosent count the last number 
+        # set the price and change format to currency
+        # we start row from 2 to ignore headers and we set columns 2 and 4 since range() dosent count the last number
         # (price and change columns) to change to currenct format
         for i in range(2, ws.max_row+1):
             for j in range(2, 4):
                 selected_cell = ws.cell(row=i, column=j)
                 selected_cell.number_format = '"$"#,##0.00_-'
         for i in range(2, ws.max_row+1):
-                selected_cell = ws.cell(row=i, column=4)
-                if selected_cell.value !=None:
-                    selected_cell.value = selected_cell.value/100.00
-                    selected_cell.number_format = '0.00%'
+            selected_cell = ws.cell(row=i, column=4)
+            if selected_cell.value != None:
+                selected_cell.value = selected_cell.value/100.00
+                selected_cell.number_format = '0.00%'
     wb.save(excel_file_address)
+
 
 def excel_set_column_width(excel_file_address: str):
     wb = xl.load_workbook(excel_file_address)
@@ -193,6 +202,33 @@ def excel_set_column_width(excel_file_address: str):
             ws.column_dimensions[i].width = max_width + 13
     wb.save(excel_file_address)
 
+def excel_set_conditional_formatting(excel_file_address: str):
+    red_color = 'ffc7ce'
+    red_color_font = '9c0103'
+    green_color = 'C6EFCE'
+    green_color_font = '006100'
+    yellow_color = 'FFEB9C'
+    yellow_color_font = '9C5700'
+    red_font = styles.Font(color=red_color_font)
+    red_fill = styles.PatternFill(start_color=red_color, end_color=red_color, fill_type='solid')
+    green_font = styles.Font(color=green_color_font)
+    green_fill = styles.PatternFill(start_color=green_color, end_color=green_color, fill_type='solid')
+    yellow_font = styles.Font(color=yellow_color_font)
+    yellow_fill =styles.PatternFill(start_color=yellow_color, end_color=yellow_color, fill_type='solid')
+    wb = xl.load_workbook(excel_file_address)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        range = rf"B2:{string.ascii_uppercase[ws.max_column]}{ws.max_row}"
+        # start from row 2 and column 2 to ignore headers and indexes
+        ws.conditional_formatting.add(range,formatting.rule.CellIsRule(operator='lessThan', formula=['0'], fill=red_fill, font=red_font))
+        ws.conditional_formatting.add(range, formatting.rule.CellIsRule(operator='lessThan', formula=['0'], fill=red_fill))
+        ws.conditional_formatting.add(range,formatting.rule.CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill, font=green_font))
+        ws.conditional_formatting.add(range, formatting.rule.CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill))
+        ws.conditional_formatting.add(range,formatting.rule.CellIsRule(operator='equal', formula=['0'], fill=yellow_fill, font=yellow_font))
+        ws.conditional_formatting.add(range, formatting.rule.CellIsRule(operator='equal', formula=['0'], fill=yellow_fill))
+    wb.save(excel_file_address)
+
+
 def excel_format(excel_file_address: str):
     """ Takes the address of an excel file and Adjusts column width font and format alignment border and table style"""
     excel_set_font(excel_file_address)
@@ -201,7 +237,7 @@ def excel_format(excel_file_address: str):
     excel_set_tables(excel_file_address)
     excel_set_number_formats(excel_file_address)
     excel_set_column_width(excel_file_address)
- 
+    excel_set_conditional_formatting(excel_file_address)
 
 
 # declare addresses
