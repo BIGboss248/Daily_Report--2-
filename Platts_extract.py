@@ -103,6 +103,13 @@ def get_Volume_Issue_Date(Platts_String: str):
     return [Volume, Issue, date_stamp]
 
 
+def export_to_excel(excel_file_address: str, dataframe_dict: dict):
+    excel_writer = pd.ExcelWriter(excel_file_address, engine='openpyxl')
+    for dataframe in dataframe_dict:
+        dataframe_dict[dataframe].to_excel(excel_writer, sheet_name=dataframe)
+    excel_writer.close()
+
+
 # declare addresses
 Platts_file_full_address = r'G:\Shared drives\Unlimited Drive\Scripts\1-Global_Resourses\Platts-text.txt'
 
@@ -211,7 +218,4 @@ dataframe_dict = {'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, '
                   'Dry_bulk_freight_assessments': df_Dry_bulk_freight_assessments}
 
 excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
-excel_writer = pd.ExcelWriter(excel_file_address,engine='openpyxl')
-for dataframe in dataframe_dict:
-    dataframe_dict[dataframe].to_excel(excel_writer, sheet_name=dataframe)
-excel_writer.close()
+export_to_excel(excel_file_address, dataframe_dict)
