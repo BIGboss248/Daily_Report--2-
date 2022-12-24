@@ -6,7 +6,8 @@ import string
 import tkinter
 from tkinter import filedialog
 import pandas as pd
-
+import openpyxl as xl
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
 
 def find_commodity_price_row(Platts_String: str, commodity_symbol: str, second_pattern='\s+\d+.+'):
     """ Finds the row corosponding to the commodity inside the daily report and returns a re.match"""
@@ -104,11 +105,32 @@ def get_Volume_Issue_Date(Platts_String: str):
 
 
 def export_to_excel(excel_file_address: str, dataframe_dict: dict):
+    """ With a openpyxl.writer writes the dataframes to excel worksheets"""
     excel_writer = pd.ExcelWriter(excel_file_address, engine='openpyxl')
     for dataframe in dataframe_dict:
         dataframe_dict[dataframe].to_excel(excel_writer, sheet_name=dataframe)
     excel_writer.close()
 
+
+def excel_format(excel_file_address: str):
+    """ Adjust column width font and format"""
+    wb = xl.load_workbook(excel_file_address)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        for i in range(1,ws.max_row+1):
+            for j in range(1,ws.max_column+1):
+                selected_cell = ws.cell(row=i, column=j)
+                selected_cell.alignment = Alignment(horizontal='center',vertical='center')
+                selected_cell.font = Font(name = 'IRNazanin',size= 16)
+        # Set column width to auto size
+        for i in string.ascii_uppercase:
+            max_width = 0    
+            for row in range(1,ws.max_row+1):
+                row_len = len(str(ws[f'{i}{row}'].value))
+                if row_len> max_width:
+                    max_width = row_len 
+            ws.column_dimensions[i].width = max_width + 10
+    wb.save(excel_file_address)
 
 # declare addresses
 Platts_file_full_address = r'G:\Shared drives\Unlimited Drive\Scripts\1-Global_Resourses\Platts-text.txt'
@@ -225,3 +247,4 @@ dataframe_dict = {'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, '
 
 excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
 export_to_excel(excel_file_address, dataframe_dict)
+excel_format(excel_file_address)
