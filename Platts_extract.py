@@ -212,10 +212,10 @@ df_Dry_bulk_freight_assessments = pd.DataFrame(final_report(
 
 # List of data frames for exporting to excel file
 dataframe_dict = {'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
-                  'Asia_Pacific_coking_coal': df_Asia_Pacific_coking_coal,
-                  'Asia_Pacific_brand_relativities_Premium_Low_Vol': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
-                  'Asia_Pacific_brand_relativities_Low_Vol_HCC': df_Asia_Pacific_brand_relativities_Low_Vol_HCC,
-                  'Dry_bulk_freight_assessments': df_Dry_bulk_freight_assessments}
+                  'coking_coal': df_Asia_Pacific_coking_coal,
+                  'Premium_Coal': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
+                  'HCC_Coal': df_Asia_Pacific_brand_relativities_Low_Vol_HCC,
+                  'freight_assessments': df_Dry_bulk_freight_assessments}
 
 excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
 export_to_excel(excel_file_address, dataframe_dict)
