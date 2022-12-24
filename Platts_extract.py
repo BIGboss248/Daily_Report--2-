@@ -8,6 +8,8 @@ from tkinter import filedialog
 import pandas as pd
 import openpyxl as xl
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
+from openpyxl.worksheet.table import Table, TableStyleInfo
+
 
 def find_commodity_price_row(Platts_String: str, commodity_symbol: str, second_pattern='\s+\d+.+'):
     """ Finds the row corosponding to the commodity inside the daily report and returns a re.match"""
@@ -111,26 +113,96 @@ def export_to_excel(excel_file_address: str, dataframe_dict: dict):
         dataframe_dict[dataframe].to_excel(excel_writer, sheet_name=dataframe)
     excel_writer.close()
 
-
-def excel_format(excel_file_address: str):
-    """ Adjust column width font and format"""
+def excel_set_font(excel_file_address: str, font=Font(name='IRNazanin', size=16)):
+    """Takes the address of an excel file Adjusts font"""
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        for i in range(1,ws.max_row+1):
-            for j in range(1,ws.max_column+1):
+        for i in range(1, ws.max_row+1):
+            for j in range(1, ws.max_column+1):
                 selected_cell = ws.cell(row=i, column=j)
-                selected_cell.alignment = Alignment(horizontal='center',vertical='center')
-                selected_cell.font = Font(name = 'IRNazanin',size= 16)
+                selected_cell.font = font
+    wb.save(excel_file_address)
+
+def excel_set_alignment(excel_file_address: str, alignment=Alignment(horizontal='center', vertical='center')):
+    """Takes the address of an excel file Adjusts alignment"""
+    wb = xl.load_workbook(excel_file_address)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        for i in range(1, ws.max_row+1):
+            for j in range(1, ws.max_column+1):
+                selected_cell = ws.cell(row=i, column=j)
+                selected_cell.alignment = alignment
+    wb.save(excel_file_address)
+
+def excel_set_border(excel_file_address: str,
+                 border=Border(left=Side(border_style="thin", color='000000'), 
+                               right=Side(border_style="thin", color='000000'), 
+                               top=Side(border_style="thin", color='000000'), 
+                               bottom=Side(border_style="thin", color='000000'))):
+    """Takes the address of an excel file Adjusts border"""
+    wb = xl.load_workbook(excel_file_address)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        for i in range(1, ws.max_row+1):
+            for j in range(1, ws.max_column+1):
+                selected_cell = ws.cell(row=i, column=j)
+                selected_cell.border = border
+    wb.save(excel_file_address)
+
+def excel_set_tables(excel_file_address: str,Table_Style = TableStyleInfo(name="TableStyleMedium19")):
+    """ Takes the address of an excel file and defines Tables with styles"""
+    wb = xl.load_workbook(excel_file_address)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        #Create Table and set a table style
+        tab = Table(displayName=sheet,
+                    ref=rf'A1:{string.ascii_uppercase[ws.max_column-1]}{ws.max_row}', tableStyleInfo=Table_Style)
+        ws.add_table(tab)
+    wb.save(excel_file_address)
+
+def excel_set_number_formats(excel_file_address: str):
+    wb = xl.load_workbook(excel_file_address)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        #set the price and change format to currency
+        #we start row from 2 to ignore headers and we set columns 2 and 4 since range() dosent count the last number 
+        # (price and change columns) to change to currenct format
+        for i in range(2, ws.max_row+1):
+            for j in range(2, 4):
+                selected_cell = ws.cell(row=i, column=j)
+                selected_cell.number_format = '"$"#,##0.00_-'
+        for i in range(2, ws.max_row+1):
+                selected_cell = ws.cell(row=i, column=4)
+                if selected_cell.value !=None:
+                    selected_cell.value = selected_cell.value/100.00
+                    selected_cell.number_format = '0.00%'
+    wb.save(excel_file_address)
+
+def excel_set_column_width(excel_file_address: str):
+    wb = xl.load_workbook(excel_file_address)
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
         # Set column width to auto size
         for i in string.ascii_uppercase:
-            max_width = 0    
-            for row in range(1,ws.max_row+1):
+            max_width = 0
+            for row in range(1, ws.max_row+1):
                 row_len = len(str(ws[f'{i}{row}'].value))
-                if row_len> max_width:
-                    max_width = row_len 
-            ws.column_dimensions[i].width = max_width + 10
+                if row_len > max_width:
+                    max_width = row_len
+            ws.column_dimensions[i].width = max_width + 13
     wb.save(excel_file_address)
+
+def excel_format(excel_file_address: str):
+    """ Takes the address of an excel file and Adjusts column width font and format alignment border and table style"""
+    excel_set_font(excel_file_address)
+    excel_set_alignment(excel_file_address)
+    excel_set_border(excel_file_address)
+    excel_set_tables(excel_file_address)
+    excel_set_number_formats(excel_file_address)
+    excel_set_column_width(excel_file_address)
+ 
+
 
 # declare addresses
 Platts_file_full_address = r'G:\Shared drives\Unlimited Drive\Scripts\1-Global_Resourses\Platts-text.txt'
