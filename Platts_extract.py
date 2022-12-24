@@ -126,7 +126,7 @@ ore_brands = {'Pilbara Blend Fines (PBF) CFR Qingdao': 'IOPBQ00',
               'Newman High Grade Fines (NHGF) CFR Qingdao': 'IONHA00',
               'Mining Area C Fines (MACF) CFR Qingdao': 'IOMAA00',
               'Jimblebar Fines (JMBF) CFR Qingdao': 'IOJBA00',
-              '57% Fe Yandi Fines (YDF) CFR Qingdao': 'IOJBA00'}
+              '57% Fe Yandi Fines (YDF) CFR Qingdao': 'IOYFA00'}
 Asia_Pacific_coking_coal = {'HCC Peak Downs Region FOB Australia': 'HCCGA00',
                             'HCC Peak Downs Region CFR China': 'HCCGC00',
                             'HCC Peak Downs Region CFR India': 'HCCGI00',
