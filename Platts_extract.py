@@ -22,11 +22,9 @@ def find_commodity_price_row(Platts_String: str, commodity_symbol: str, second_p
     return matches
 
 
-def extract_numbers(Platts_String: str, commodity_symbol: str, second_pattern='\s+\d+.+'):
+def extract_numbers(out_match: re.match,index: int)-> dict:
     """gets the file  and commodity symbol and uses the find_commodity_price_row gets the row of the commodity inside the daily report and
-    removes the name symbol and spaces of the row and retruns a list of floats containing only the numbers meaning prices and changes"""
-    out_match = find_commodity_price_row(
-        Platts_String, commodity_symbol, second_pattern)
+    removes the name symbol and spaces of the row and retruns a dictionary contaning the info"""
     # creating a list of english letters to remove the name and symbol
     alphabet = list(string.ascii_letters)
     # extracting the string from re,match and turning it into a list of strings
@@ -53,7 +51,13 @@ def extract_numbers(Platts_String: str, commodity_symbol: str, second_pattern='\
         in_list.remove('.')
     # turning the list of strings into float
     in_list = [float(x) for x in in_list]
-    return in_list
+    if index ==1:
+        result = {'Price':in_list[0]}
+    if index ==2:
+        result = {'Price':in_list[0],'Change':in_list[1]}
+    if index ==3:
+        result = {'Price':in_list[0],'Change':in_list[1],'Change %':in_list[2]}
+    return result
 
 
 def generate_report(Platts_String: str, commodity: dict, second_pattern='\s+\d+.+'):
@@ -87,6 +91,27 @@ def final_report(Platts_String: str, commodity: dict, index: int, headers: list,
     df_output = pd.DataFrame(output)
     df_output.set_index('Commodity', inplace=True)
     return df_output
+
+
+def final_final_report(Platts_String: str, commodity_dict: dict,index: int,
+                       second_pattern='\s+\d+.+')-> pd.DataFrame:
+
+    dataframe = pd.DataFrame(columns=commodity_dict['attributes'])
+    for commodity_name in list(commodity_dict.keys()):
+        commodity_symbol = commodity_dict[commodity_name]['symbol']
+        match = find_commodity_price_row(Platts_String,commodity_symbol,second_pattern)
+        numbers = extract_numbers(match, index)
+        #assigning commodity name which is used as index
+        dataframe['Commodity'] = commodity_name
+        #assigning extracted numbers
+        dataframe['Price'] = numbers['Price']
+        if index ==2:
+            dataframe['Change'] = numbers['Change']
+        if index ==3:
+            dataframe['Change'] = numbers['Change']
+            dataframe['Change %'] = numbers['Change %']
+    return dataframe
+        
 
 
 def get_Volume_Issue_Date(Platts_String: str):
@@ -287,9 +312,15 @@ Platts_Daily_Report_String = Platts_Daily_Report_File.read()
 Platts_Daily_Report_File.close()
 
 # list of commoditys
-indexes = {'IODEX 62% Fe CFR North China': 'IODBZ00',
-           '65% Fe CFR North China': 'IOPRM00',
-           '58% Fe CFR North China': 'IODFE00'}
+indexes = {'IODEX 62% Fe CFR North China':{'symbol':'IODBZ00','attributes':{'Fe':62,'moisture':8,
+                                           'silica':4,'alumina':2.25,
+                                           'phosphorus':0.02,'sulfur':0.02}} ,
+           '65% Fe CFR North China':{'symbol':'IOPRM00','attributes':{'Fe':65,'moisture':8.5,
+                                                                      'silica':3.5,'alumina':1,
+                                                                      'phosphorus':0.075,'sulfur':None}},
+           '58% Fe CFR North China':{'symbol':'IODFE00','attributes':{'Fe':58,'moisture':10,
+                                                                      'silica':5,'alumina':4,
+                                                                      'phosphorus':0.075,'sulfur':None}}}
 lump = {'Lump outright': 'IOCLS00'}
 pellet = {'Weekly CFR China 65% Fe': 'IOBFC04',
           'Daily CFR China 63% Fe spot fixed price assessment': 'IOCQR04',
@@ -352,61 +383,65 @@ Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
                                 'USEC-Brazil-Panamax': 'CDBUB00',
                                 'US Mobile-Rotterdam-Panamax': 'CDMAR00'}
 
+print(final_final_report(Platts_Daily_Report_String,indexes,4))
 
-df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
-                                       4, ['Commodity', 'Price', 'Change', 'Change %']))
-df_indexes['Fe'] = [62, 65, 58]
-df_indexes['moisture'] = [8, 8.5, 10]
-df_indexes['silica'] = [4, 3.5, 5]
-df_indexes['alumina'] = [2.25, 1, 4]
-df_indexes['phosphorus'] = [0.02, 0.075, 0.05]
-df_indexes['sulfur'] = [0.02, None, None]
 
-df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump, 3, [
-                       'Commodity', 'Price', 'Change']))
-df_lump['Fe'] = [62]
-df_lump['moisture'] = [4]
-df_lump['silica'] = [3.5]
-df_lump['alumina'] = [1.5]
-df_lump['phosphorus'] = [0.075]
-df_lump['sulfur'] = [0.02]
+####################################################################################################
+# df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
+#                                        4, ['Commodity', 'Price', 'Change', 'Change %']))
+# 
+# df_indexes['Fe'] = [62, 65, 58]
+# df_indexes['moisture'] = [8, 8.5, 10]
+# df_indexes['silica'] = [4, 3.5, 5]
+# df_indexes['alumina'] = [2.25, 1, 4]
+# df_indexes['phosphorus'] = [0.02, 0.075, 0.05]
+# df_indexes['sulfur'] = [0.02, None, None]
 
-df_pellet = pd.DataFrame(final_report(
-    Platts_Daily_Report_String, pellet, 3, ['Commodity', 'Price', 'Change']))
-# Adding the IODEX Price to Premiums
-df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] = df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] + \
-    df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
-df_pellet.loc['Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] = df_pellet.loc[
-    'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
-df_pellet['Fe'] = [65, 64, 65, 67.5]
-df_pellet['alumina'] = [0.35, 2.7, 0.5, None]
-df_pellet['silica'] = [5, 3.5, 3, 1.5]
-df_pellet['phosphorus'] = [0.02, 0.08, None, None]
-df_pellet['sulfur'] = [0.003, 0.008, None, None]
-df_pellet['CCS'] = [250, 230, 275, 300]
+# df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump, 3, [
+#                        'Commodity', 'Price', 'Change']))
+# df_lump['Fe'] = [62]
+# df_lump['moisture'] = [4]
+# df_lump['silica'] = [3.5]
+# df_lump['alumina'] = [1.5]
+# df_lump['phosphorus'] = [0.075]
+# df_lump['sulfur'] = [0.02]
 
-df_ore_brands = pd.DataFrame(final_report(
-    Platts_Daily_Report_String, ore_brands, 3, ['Commodity', 'Price', 'Change']))
+# df_pellet = pd.DataFrame(final_report(
+#     Platts_Daily_Report_String, pellet, 3, ['Commodity', 'Price', 'Change']))
+# # Adding the IODEX Price to Premiums
+# df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] = df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] + \
+#     df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
+# df_pellet.loc['Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] = df_pellet.loc[
+#     'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
+# df_pellet['Fe'] = [65, 64, 65, 67.5]
+# df_pellet['alumina'] = [0.35, 2.7, 0.5, None]
+# df_pellet['silica'] = [5, 3.5, 3, 1.5]
+# df_pellet['phosphorus'] = [0.02, 0.08, None, None]
+# df_pellet['sulfur'] = [0.003, 0.008, None, None]
+# df_pellet['CCS'] = [250, 230, 275, 300]
 
-df_Asia_Pacific_coking_coal = pd.DataFrame(final_report(
-    Platts_Daily_Report_String, Asia_Pacific_coking_coal, 3, ['Commodity', 'Price', 'Change']))
+# df_ore_brands = pd.DataFrame(final_report(
+#     Platts_Daily_Report_String, ore_brands, 3, ['Commodity', 'Price', 'Change']))
 
-df_Asia_Pacific_brand_relativities_Premium_Low_Vol = pd.DataFrame(final_report(
-    Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Premium_Low_Vol, 2, ['Commodity', 'Price']))
+# df_Asia_Pacific_coking_coal = pd.DataFrame(final_report(
+#     Platts_Daily_Report_String, Asia_Pacific_coking_coal, 3, ['Commodity', 'Price', 'Change']))
 
-df_Asia_Pacific_brand_relativities_Low_Vol_HCC = pd.DataFrame(final_report(
-    Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Low_Vol_HCC, 2, ['Commodity', 'Price']))
+# df_Asia_Pacific_brand_relativities_Premium_Low_Vol = pd.DataFrame(final_report(
+#     Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Premium_Low_Vol, 2, ['Commodity', 'Price']))
 
-df_Dry_bulk_freight_assessments = pd.DataFrame(final_report(
-    Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, ['Commodity', 'Price', 'Change'], second_pattern='.+'))
+# df_Asia_Pacific_brand_relativities_Low_Vol_HCC = pd.DataFrame(final_report(
+#     Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Low_Vol_HCC, 2, ['Commodity', 'Price']))
 
-# List of data frames for exporting to excel file
-dataframe_dict = {'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
-                  'coking_coal': df_Asia_Pacific_coking_coal,
-                  'Premium_Coal': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
-                  'HCC_Coal': df_Asia_Pacific_brand_relativities_Low_Vol_HCC,
-                  'freight_assessments': df_Dry_bulk_freight_assessments}
+# df_Dry_bulk_freight_assessments = pd.DataFrame(final_report(
+#     Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, ['Commodity', 'Price', 'Change'], second_pattern='.+'))
 
-excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
-export_to_excel(excel_file_address, dataframe_dict)
-excel_format(excel_file_address)
+# # List of data frames for exporting to excel file
+# dataframe_dict = {'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
+#                   'coking_coal': df_Asia_Pacific_coking_coal,
+#                   'Premium_Coal': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
+#                   'HCC_Coal': df_Asia_Pacific_brand_relativities_Low_Vol_HCC,
+#                   'freight_assessments': df_Dry_bulk_freight_assessments}
+
+# excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
+# export_to_excel(excel_file_address, dataframe_dict)
+# excel_format(excel_file_address)
