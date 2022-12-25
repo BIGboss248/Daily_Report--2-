@@ -179,27 +179,29 @@ def excel_set_number_formats(excel_file_address: str):
         price_column_num = 0
         change_column_num = 0
         change_percent_column_num = 0
-        for j in range(1,ws.max_column+1):
-            selected_cell = ws.cell(row=1 , column=j)
+        for j in range(1, ws.max_column+1):
+            selected_cell = ws.cell(row=1, column=j)
             if selected_cell.value == 'Price':
                 price_column_num = j
             if selected_cell.value == 'Change':
                 change_column_num = j
             if selected_cell.value == 'Change %':
                 change_percent_column_num = j
-        if price_column_num !=0:        
+        if price_column_num != 0:
             for i in range(2, ws.max_row+1):
-                    selected_cell = ws.cell(row=i, column=price_column_num)
-                    selected_cell.number_format = '"$"#,##0.00_-'
+                selected_cell = ws.cell(row=i, column=price_column_num)
+                selected_cell.number_format = '"$"#,##0.00_-'
         if change_column_num != 0:
             for i in range(2, ws.max_row+1):
-                    selected_cell = ws.cell(row = i , column=change_column_num)
-                    selected_cell.number_format = '"$"#,##0.00_-'
+                selected_cell = ws.cell(row=i, column=change_column_num)
+                selected_cell.number_format = '"$"#,##0.00_-'
         if change_percent_column_num != 0:
             for i in range(2, ws.max_row+1):
-                selected_cell = ws.cell(row = i, column=change_percent_column_num)
-                selected_cell.value = selected_cell.value/100.00
-                selected_cell.number_format = '0.00%'
+                selected_cell = ws.cell(
+                    row=i, column=change_percent_column_num)
+                if selected_cell != None:
+                    selected_cell.value = selected_cell.value/100.00
+                    selected_cell.number_format = '0.00%'
     wb.save(excel_file_address)
 
 
@@ -226,35 +228,45 @@ def excel_set_conditional_formatting(excel_file_address: str):
     yellow_color = 'FFEB9C'
     yellow_color_font = '9C5700'
     red_font = styles.Font(color=red_color_font)
-    red_fill = styles.PatternFill(start_color=red_color, end_color=red_color, fill_type='solid')
+    red_fill = styles.PatternFill(
+        start_color=red_color, end_color=red_color, fill_type='solid')
     green_font = styles.Font(color=green_color_font)
-    green_fill = styles.PatternFill(start_color=green_color, end_color=green_color, fill_type='solid')
+    green_fill = styles.PatternFill(
+        start_color=green_color, end_color=green_color, fill_type='solid')
     yellow_font = styles.Font(color=yellow_color_font)
-    yellow_fill =styles.PatternFill(start_color=yellow_color, end_color=yellow_color, fill_type='solid')
+    yellow_fill = styles.PatternFill(
+        start_color=yellow_color, end_color=yellow_color, fill_type='solid')
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
         price_column_num = 0
         change_column_num = 0
         change_percent_column_num = 0
-        for j in range(1,ws.max_column+1):
-            selected_cell = ws.cell(row=1 , column=j)
+        for j in range(1, ws.max_column+1):
+            selected_cell = ws.cell(row=1, column=j)
             if selected_cell.value == 'Price':
                 price_column_num = j
             if selected_cell.value == 'Change':
                 change_column_num = j
             if selected_cell.value == 'Change %':
                 change_percent_column_num = j
-        rules_column_nums = [price_column_num,change_column_num,change_percent_column_num]
+        rules_column_nums = [price_column_num,
+                             change_column_num, change_percent_column_num]
         for i in rules_column_nums:
             apply_range = rf"{string.ascii_uppercase[i-1]}2:{string.ascii_uppercase[i-1]}{ws.max_row}"
             # start from row 2 and column 2 to ignore headers and indexes
-            ws.conditional_formatting.add(apply_range,formatting.rule.CellIsRule(operator='lessThan', formula=['0'], fill=red_fill, font=red_font))
-            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(operator='lessThan', formula=['0'], fill=red_fill))
-            ws.conditional_formatting.add(apply_range,formatting.rule.CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill, font=green_font))
-            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill))
-            ws.conditional_formatting.add(apply_range,formatting.rule.CellIsRule(operator='equal', formula=['0'], fill=yellow_fill, font=yellow_font))
-            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(operator='equal', formula=['0'], fill=yellow_fill))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(
+                operator='lessThan', formula=['0'], fill=red_fill, font=red_font))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(
+                operator='lessThan', formula=['0'], fill=red_fill))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(
+                operator='greaterThan', formula=['0'], fill=green_fill, font=green_font))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(
+                operator='greaterThan', formula=['0'], fill=green_fill))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(
+                operator='equal', formula=['0'], fill=yellow_fill, font=yellow_font))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(
+                operator='equal', formula=['0'], fill=yellow_fill))
     wb.save(excel_file_address)
 
 
@@ -347,9 +359,21 @@ Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
 
 df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
                                        4, ['Commodity', 'Price', 'Change', 'Change %']))
+df_indexes['Fe'] = [62, 65, 58]
+df_indexes['moisture'] = [8, 8.5, 10]
+df_indexes['silica'] = [4, 3.5, 5]
+df_indexes['alumina'] = [2.25, 1, 4]
+df_indexes['phosphorus'] = [0.02, 0.075, 0.05]
+df_indexes['sulfur'] = [0.02, None, None]
 
 df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump, 3, [
                        'Commodity', 'Price', 'Change']))
+df_lump['Fe'] = [62]
+df_lump['moisture'] = [4]
+df_lump['silica'] = [3.5]
+df_lump['alumina'] = [1.5]
+df_lump['phosphorus'] = [0.075]
+df_lump['sulfur'] = [0.02]
 
 df_pellet = pd.DataFrame(final_report(
     Platts_Daily_Report_String, pellet, 3, ['Commodity', 'Price', 'Change']))
@@ -358,7 +382,12 @@ df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] = df_pellet.loc['Weekly CFR Ch
     df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
 df_pellet.loc['Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] = df_pellet.loc[
     'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
-
+df_pellet['Fe'] = [65, 64, 65, 67.5]
+df_pellet['alumina'] = [0.35, 2.7, 0.5, None]
+df_pellet['silica'] = [5, 3.5, 3, 1.5]
+df_pellet['phosphorus'] = [0.02, 0.08, None, None]
+df_pellet['sulfur'] = [0.003, 0.008, None, None]
+df_pellet['CCS'] = [250, 230, 275, 300]
 
 df_ore_brands = pd.DataFrame(final_report(
     Platts_Daily_Report_String, ore_brands, 3, ['Commodity', 'Price', 'Change']))
