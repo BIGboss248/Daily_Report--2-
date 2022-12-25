@@ -176,13 +176,28 @@ def excel_set_number_formats(excel_file_address: str):
         # set the price and change format to currency
         # we start row from 2 to ignore headers and we set columns 2 and 4 since range() dosent count the last number
         # (price and change columns) to change to currenct format
-        for i in range(2, ws.max_row+1):
-            for j in range(2, 4):
-                selected_cell = ws.cell(row=i, column=j)
-                selected_cell.number_format = '"$"#,##0.00_-'
-        for i in range(2, ws.max_row+1):
-            selected_cell = ws.cell(row=i, column=4)
-            if selected_cell.value != None:
+        price_column_num = 0
+        change_column_num = 0
+        change_percent_column_num = 0
+        for j in range(1,ws.max_column+1):
+            selected_cell = ws.cell(row=1 , column=j)
+            if selected_cell.value == 'Price':
+                price_column_num = j
+            if selected_cell.value == 'Change':
+                change_column_num = j
+            if selected_cell.value == 'Change %':
+                change_percent_column_num = j
+        if price_column_num !=0:        
+            for i in range(2, ws.max_row+1):
+                    selected_cell = ws.cell(row=i, column=price_column_num)
+                    selected_cell.number_format = '"$"#,##0.00_-'
+        if change_column_num != 0:
+            for i in range(2, ws.max_row+1):
+                    selected_cell = ws.cell(row = i , column=change_column_num)
+                    selected_cell.number_format = '"$"#,##0.00_-'
+        if change_percent_column_num != 0:
+            for i in range(2, ws.max_row+1):
+                selected_cell = ws.cell(row = i, column=change_percent_column_num)
                 selected_cell.value = selected_cell.value/100.00
                 selected_cell.number_format = '0.00%'
     wb.save(excel_file_address)
@@ -202,6 +217,7 @@ def excel_set_column_width(excel_file_address: str):
             ws.column_dimensions[i].width = max_width + 13
     wb.save(excel_file_address)
 
+
 def excel_set_conditional_formatting(excel_file_address: str):
     red_color = 'ffc7ce'
     red_color_font = '9c0103'
@@ -218,14 +234,27 @@ def excel_set_conditional_formatting(excel_file_address: str):
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        range = rf"B2:{string.ascii_uppercase[ws.max_column]}{ws.max_row}"
-        # start from row 2 and column 2 to ignore headers and indexes
-        ws.conditional_formatting.add(range,formatting.rule.CellIsRule(operator='lessThan', formula=['0'], fill=red_fill, font=red_font))
-        ws.conditional_formatting.add(range, formatting.rule.CellIsRule(operator='lessThan', formula=['0'], fill=red_fill))
-        ws.conditional_formatting.add(range,formatting.rule.CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill, font=green_font))
-        ws.conditional_formatting.add(range, formatting.rule.CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill))
-        ws.conditional_formatting.add(range,formatting.rule.CellIsRule(operator='equal', formula=['0'], fill=yellow_fill, font=yellow_font))
-        ws.conditional_formatting.add(range, formatting.rule.CellIsRule(operator='equal', formula=['0'], fill=yellow_fill))
+        price_column_num = 0
+        change_column_num = 0
+        change_percent_column_num = 0
+        for j in range(1,ws.max_column+1):
+            selected_cell = ws.cell(row=1 , column=j)
+            if selected_cell.value == 'Price':
+                price_column_num = j
+            if selected_cell.value == 'Change':
+                change_column_num = j
+            if selected_cell.value == 'Change %':
+                change_percent_column_num = j
+        rules_column_nums = [price_column_num,change_column_num,change_percent_column_num]
+        for i in rules_column_nums:
+            apply_range = rf"{string.ascii_uppercase[i-1]}2:{string.ascii_uppercase[i-1]}{ws.max_row}"
+            # start from row 2 and column 2 to ignore headers and indexes
+            ws.conditional_formatting.add(apply_range,formatting.rule.CellIsRule(operator='lessThan', formula=['0'], fill=red_fill, font=red_font))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(operator='lessThan', formula=['0'], fill=red_fill))
+            ws.conditional_formatting.add(apply_range,formatting.rule.CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill, font=green_font))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(operator='greaterThan', formula=['0'], fill=green_fill))
+            ws.conditional_formatting.add(apply_range,formatting.rule.CellIsRule(operator='equal', formula=['0'], fill=yellow_fill, font=yellow_font))
+            ws.conditional_formatting.add(apply_range, formatting.rule.CellIsRule(operator='equal', formula=['0'], fill=yellow_fill))
     wb.save(excel_file_address)
 
 
