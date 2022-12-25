@@ -239,19 +239,15 @@ def excel_set_conditional_formatting(excel_file_address: str):
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        price_column_num = 0
         change_column_num = 0
         change_percent_column_num = 0
         for j in range(1, ws.max_column+1):
             selected_cell = ws.cell(row=1, column=j)
-            if selected_cell.value == 'Price':
-                price_column_num = j
             if selected_cell.value == 'Change':
                 change_column_num = j
             if selected_cell.value == 'Change %':
                 change_percent_column_num = j
-        rules_column_nums = [price_column_num,
-                             change_column_num, change_percent_column_num]
+        rules_column_nums = [change_column_num, change_percent_column_num]
         for i in rules_column_nums:
             apply_range = rf"{string.ascii_uppercase[i-1]}2:{string.ascii_uppercase[i-1]}{ws.max_row}"
             # start from row 2 and column 2 to ignore headers and indexes
