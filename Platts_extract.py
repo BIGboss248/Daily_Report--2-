@@ -22,7 +22,7 @@ def find_commodity_price_row(Platts_String: str, commodity_symbol: str, second_p
     return matches
 
 
-def extract_numbers(out_match: re.match,index: int)-> dict:
+def extract_numbers(out_match: re.match, index: int) -> dict:
     """gets the file  and commodity symbol and uses the find_commodity_price_row gets the row of the commodity inside the daily report and
     removes the name symbol and spaces of the row and retruns a dictionary contaning the info"""
     # creating a list of english letters to remove the name and symbol
@@ -51,12 +51,13 @@ def extract_numbers(out_match: re.match,index: int)-> dict:
         in_list.remove('.')
     # turning the list of strings into float
     in_list = [float(x) for x in in_list]
-    if index ==2:
-        result = {'Price':in_list[0]}
-    if index ==3:
-        result = {'Price':in_list[0],'Change':in_list[1]}
-    if index ==4:
-        result = {'Price':in_list[0],'Change':in_list[1],'Change %':in_list[2]}
+    if index == 2:
+        result = {'Price': in_list[0]}
+    if index == 3:
+        result = {'Price': in_list[0], 'Change': in_list[1]}
+    if index == 4:
+        result = {'Price': in_list[0],
+                  'Change': in_list[1], 'Change %': in_list[2]}
     return result
 
 
@@ -71,52 +72,31 @@ def generate_report(Platts_String: str, commodity: dict, second_pattern='\s+\d+.
     return (result)
 
 
-def final_report(Platts_String: str, commodity: dict, index: int, headers: list, second_pattern='\s+\d+.+'):
-    """Using generate_report it takes the output list and extracts the numbers we need plus adding the headers for pandas data farme"""
-    report = generate_report(Platts_String, commodity, second_pattern)
-    result = []
-    for i in report:
-        temp = []
-        for j in range(index):
-            temp.append(i[j])
-        result.append(temp)
-    output = dict.fromkeys(headers)
-    for i in output.keys():
-        output[i] = []
-    j = 0
-    for i in output.keys():
-        for k in result:
-            output[i].append(k[j])
-        j = j+1
-    df_output = pd.DataFrame(output)
-    df_output.set_index('Commodity', inplace=True)
-    return df_output
-
-
-def final_final_report(Platts_String: str, commodity_dict: dict,index: int,
-                       second_pattern='\s+\d+.+')-> pd.DataFrame:
-    
-    first_key = list(commodity_dict.keys())[0]
-    df_columns = list(commodity_dict[first_key]['attributes'])
-    df_columns.insert(0,'Commodity')
-    dataframe = pd.DataFrame(columns=df_columns)
-    for column in df_columns:
-        dataframe[column] = []
+def final_report(Platts_String: str, commodity_dict: dict, needed_numbers: int,
+                 second_pattern='\s+\d+.+') -> pd.DataFrame:
+    dataframe_index = 0
+    complete_dataframe = pd.DataFrame()
     for commodity_name in list(commodity_dict.keys()):
         commodity_symbol = commodity_dict[commodity_name]['symbol']
-        match = find_commodity_price_row(Platts_String,commodity_symbol,second_pattern)
-        numbers = extract_numbers(match, index)
-        #assigning commodity name which is used as index
-        dataframe['Commodity'].append(commodity_name)
-        #assigning extracted numbers
-        dataframe['Price'].append(numbers['Price'])
-        if index ==3:
-            dataframe['Change'].append(numbers['Change'])
-        if index ==4:
-            dataframe['Change'].append(numbers['Change'])
-            dataframe['Change %'].append(numbers['Change %'])
-    return dataframe
-        
+        commodity_attributes_dict = commodity_dict[commodity_name]['attributes']
+        match = find_commodity_price_row(
+            Platts_String, commodity_symbol, second_pattern)
+        numbers = extract_numbers(match, needed_numbers)
+        # assigning commodity name which is used as needed_numbers
+        commodity_attributes_dict['Commodity'] = commodity_name
+        # assigning extracted numbers
+        commodity_attributes_dict['Price'] = numbers['Price']
+        if needed_numbers == 3:
+            commodity_attributes_dict['Change'] = numbers['Change']
+        if needed_numbers == 4:
+            commodity_attributes_dict['Change'] = numbers['Change']
+            commodity_attributes_dict['Change %'] = numbers['Change %']
+        commodity_df = pd.DataFrame(
+            commodity_attributes_dict, index=[dataframe_index])
+        commodity_df.set_index('Commodity', inplace=True)
+        complete_dataframe = pd.concat([complete_dataframe, commodity_df])
+        dataframe_index = dataframe_index + 1
+    return complete_dataframe
 
 
 def get_Volume_Issue_Date(Platts_String: str):
@@ -308,7 +288,7 @@ def excel_format(excel_file_address: str):
 
 
 # declare addresses
-Platts_file_full_address = r'G:\Shared drives\Unlimited Drive\Scripts\1-Global_Resourses\Platts-text.txt'
+Platts_file_full_address = r'G:\Shared drives\Unlimited Drive\Scripts\Daily_Report (2)\Resources\Platts-text.txt'
 
 # Open Platts file
 Platts_Daily_Report_File = open(
@@ -317,136 +297,136 @@ Platts_Daily_Report_String = Platts_Daily_Report_File.read()
 Platts_Daily_Report_File.close()
 
 # list of commoditys
-indexes = {'IODEX 62% Fe CFR North China':{'symbol':'IODBZ00','attributes':{'Fe':62,'moisture':8,
-                                           'silica':4,'alumina':2.25,
-                                           'phosphorus':0.02,'sulfur':0.02}} ,
-           '65% Fe CFR North China':{'symbol':'IOPRM00','attributes':{'Fe':65,'moisture':8.5,
-                                                                      'silica':3.5,'alumina':1,
-                                                                      'phosphorus':0.075,'sulfur':None}},
-           '58% Fe CFR North China':{'symbol':'IODFE00','attributes':{'Fe':58,'moisture':10,
-                                                                      'silica':5,'alumina':4,
-                                                                      'phosphorus':0.075,'sulfur':None}}}
-lump = {'Lump outright': 'IOCLS00'}
-pellet = {'Weekly CFR China 65% Fe': 'IOBFC04',
-          'Daily CFR China 63% Fe spot fixed price assessment': 'IOCQR04',
-          'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil': 'SB01095',
-          'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)': 'IODBP00'}
-ore_brands = {'Pilbara Blend Fines (PBF) CFR Qingdao': 'IOPBQ00',
-              'Brazilian Blend Fines (BRBF) CFR Qingdao': 'IOBBA00',
-              'Newman High Grade Fines (NHGF) CFR Qingdao': 'IONHA00',
-              'Mining Area C Fines (MACF) CFR Qingdao': 'IOMAA00',
-              'Jimblebar Fines (JMBF) CFR Qingdao': 'IOJBA00',
-              '57% Fe Yandi Fines (YDF) CFR Qingdao': 'IOYFA00'}
-Asia_Pacific_coking_coal = {'HCC Peak Downs Region FOB Australia': 'HCCGA00',
-                            'HCC Peak Downs Region CFR China': 'HCCGC00',
-                            'HCC Peak Downs Region CFR India': 'HCCGI00',
-                            'Premium Low Vol FOB Australia': 'PLVHA00',
-                            'Premium Low Vol CFR China': 'PLVHC00',
-                            'Premium Low Vol CFR India': 'PLVHI00',
-                            'Low Vol HCC FOB Australia': 'HCCAU00',
-                            'Low Vol HCC CFR China': 'HCCCH00',
-                            'Low Vol HCC CFR India': 'HCCIN00',
-                            'Low Vol PCI FOB Australia': 'MCLVA00',
-                            'Low Vol PCI CFR China': 'MCLVC00',
-                            'Low Vol PCI CFR India': 'MCLVI00',
-                            'Mid Vol PCI FOB Australia': 'MCLAA00',
-                            'Mid Vol PCI CFR China': 'MCLAC00',
-                            'Mid Vol PCI CFR India': 'MCVAI00',
-                            'Semi Soft FOB Australia': 'MCSSA00',
-                            'Semi Soft CFR China': 'MCSSC00',
-                            'Semi Soft CFR India': 'MCSSI00'}
-Asia_Pacific_brand_relativities_Premium_Low_Vol = {'Peak Downs FOB Australia': 'HCPDA00',
-                                                   'Peak Downs CFR China': 'MCBAA00',
-                                                   'Saraji FOB Australia': 'HCSAA00',
-                                                   'Saraji CFR China': 'MCBAB00',
-                                                   'Oaky North FOB Australia': 'HCOKA00',
-                                                   'Oaky North CFR China': 'MCBAR00',
-                                                   'Illawarra FOB Australia': 'HCIWA00',
-                                                   'Illawarra CFR China': 'MCBAH00',
-                                                   'Moranbah North FOB Australia': 'HCMOA00',
-                                                   'Moranbah North CFR China': 'MCBAG00',
-                                                   'Goonyella FOB Australia': 'HCGOA00',
-                                                   'Goonyella CFR China': 'MCBAE00',
-                                                   'Peak Downs North FOB Australia': 'HCPNA00',
-                                                   'Peak Downs North CFR China': 'MCBAJ00',
-                                                   'Goonyella C FOB Australia': 'HCGNA00',
-                                                   'Goonyella C CFR China': 'MCBAI00',
-                                                   'Riverside FOB Australia': 'HCRVA00',
-                                                   'Riverside CFR China': 'MCRVR00',
-                                                   'GLV FOB Australia': 'HCHCA00',
-                                                   'GLV CFR China': 'MCBAF00'}
-Asia_Pacific_brand_relativities_Low_Vol_HCC = {'Lake Vermont HCC': 'MCBAN00',
-                                               'Carborough Downs': 'MCBAO00',
-                                               'Middlemount Coking': 'MCBAP00',
-                                               'Poitrel Semi Hard': 'MCBAQ00'}
-Dry_bulk_freight_assessments = {'Australia-China-Capesize': 'CDANC00',
-                                'Australia-Rotterdam-Capesize': 'CDARN00',
-                                'Australia-China-Panamax': 'CDBFA00',
-                                'Australia-India-Panamax': 'CDBFAI0',
-                                'USEC-India-Panamax': 'CDBUI00',
-                                'USEC-Rotterdam-Panamax': 'CDBUR00',
-                                'USEC-Brazil-Panamax': 'CDBUB00',
-                                'US Mobile-Rotterdam-Panamax': 'CDMAR00'}
+indexes = {'IODEX 62% Fe CFR North China': {'symbol': 'IODBZ00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                'silica': 4, 'alumina': 2.25,
+                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
+           '65% Fe CFR North China': {'symbol': 'IOPRM00', 'attributes': {'Fe': 65, 'moisture': 8.5,
+                                                                          'silica': 3.5, 'alumina': 1,
+                                                                          'phosphorus': 0.075, 'sulfur': None}},
+           '58% Fe CFR North China': {'symbol': 'IODFE00', 'attributes': {'Fe': 58, 'moisture': 10,
+                                                                          'silica': 5, 'alumina': 4,
+                                                                          'phosphorus': 0.075, 'sulfur': None}}}
 
-print(final_final_report(Platts_Daily_Report_String,indexes,4))
+lump = {'Lump outright':{'symbol':'IOCLS00', 'attributes':{'Fe':62,'moisture':4,
+                                                           'silica':3.5,'alumina':1.5,
+                                                           'phosphorus':0.075,'sulfur':0.02}}}
+
+pellet = {'Weekly CFR China 65% Fe': {'symbol':'IOBFC04', 'attributes':{'Fe':65,'alumina':0.35,
+                                                                        'silica':5,'phosphorus':0.02,
+                                                                        'sulfur':0.003,'CCS':250}},
+          'Daily CFR China 63% Fe spot fixed price assessment': {'symbol':'IOCQR04', 'attributes':{'Fe':64,'alumina':2.7,
+                                                                                                   'silica':3.5,'phosphorus':0.08,
+                                                                                                   'sulfur':0.008,'CCS':230}},
+          'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil': {'symbol':'SB01095','attributes':{'Fe':65,'alumina':0.5,
+                                                                                                     'silica':3,'phosphorus':None,
+                                                                                                     'sulfur':None,'CCS':275}},
+          'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)':{'symbol':'IODBP00','attributes':{'Fe':67.5,'alumina':None,
+                                                                                                     'silica':1.5,'phosphorus':None,
+                                                                                                     'sulfur':None,'CCS':300}}}
+
+ore_brands = {'Pilbara Blend Fines (PBF) CFR Qingdao':{'symbol':'IOPBQ00','attributes': {'Fe': 62, 'moisture': 8,
+                                                                                'silica': 4, 'alumina': 2.25,
+                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
+              'Brazilian Blend Fines (BRBF) CFR Qingdao':{'symbol':'IOBBA00','attributes': {'Fe': 62, 'moisture': 8,
+                                                                                'silica': 4, 'alumina': 2.25,
+                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
+              'Newman High Grade Fines (NHGF) CFR Qingdao':{'symbol':'IONHA00','attributes': {'Fe': 62, 'moisture': 8,
+                                                                                'silica': 4, 'alumina': 2.25,
+                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
+              'Mining Area C Fines (MACF) CFR Qingdao':{'symbol':'IOMAA00','attributes': {'Fe': 62, 'moisture': 8,
+                                                                                'silica': 4, 'alumina': 2.25,
+                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
+              'Jimblebar Fines (JMBF) CFR Qingdao':{'symbol':'IOJBA00','attributes': {'Fe': 62, 'moisture': 8,
+                                                                                'silica': 4, 'alumina': 2.25,
+                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
+              '57% Fe Yandi Fines (YDF) CFR Qingdao':{'symbol':'IOYFA00','attributes': {'Fe': 57, 'moisture': 10,
+                                                                                        'silica': 5, 'alumina': 4,
+                                                                                        'phosphorus': 0.075, 'sulfur': None}}}
+
+Asia_Pacific_coking_coal = {'HCC Peak Downs Region FOB Australia':{'symbol':'HCCGA00','attributes':{}},
+                            'HCC Peak Downs Region CFR China': {'symbol':'HCCGC00','attributes':{}},
+                            'HCC Peak Downs Region CFR India': {'symbol':'HCCGI00','attributes':{}},
+                            'Premium Low Vol FOB Australia': {'symbol':'PLVHA00','attributes':{}},
+                            'Premium Low Vol CFR China': {'symbol':'PLVHC00','attributes':{}},
+                            'Premium Low Vol CFR India': {'symbol':'PLVHI00','attributes':{}},
+                            'Low Vol HCC FOB Australia': {'symbol':'HCCAU00','attributes':{}},
+                            'Low Vol HCC CFR China': {'symbol':'HCCCH00','attributes':{}},
+                            'Low Vol HCC CFR India': {'symbol':'HCCIN00','attributes':{}},
+                            'Low Vol PCI FOB Australia': {'symbol':'MCLVA00','attributes':{}},
+                            'Low Vol PCI CFR China': {'symbol':'MCLVC00','attributes':{}},
+                            'Low Vol PCI CFR India': {'symbol':'MCLVI00','attributes':{}},
+                            'Mid Vol PCI FOB Australia': {'symbol':'MCLAA00','attributes':{}},
+                            'Mid Vol PCI CFR China': {'symbol':'MCLAC00','attributes':{}},
+                            'Mid Vol PCI CFR India': {'symbol':'MCVAI00','attributes':{}},
+                            'Semi Soft FOB Australia': {'symbol':'MCSSA00','attributes':{}},
+                            'Semi Soft CFR China': {'symbol':'MCSSC00','attributes':{}},
+                            'Semi Soft CFR India': {'symbol':'MCSSI00','attributes':{}}}
+
+Asia_Pacific_brand_relativities_Premium_Low_Vol = {'Peak Downs FOB Australia': {'symbol':'HCPDA00','attributes':{}},
+                                                   'Peak Downs CFR China': {'symbol':'MCBAA00','attributes':{}},
+                                                   'Saraji FOB Australia': {'symbol':'HCSAA00','attributes':{}},
+                                                   'Saraji CFR China': {'symbol':'MCBAB00','attributes':{}},
+                                                   'Oaky North FOB Australia': {'symbol':'HCOKA00','attributes':{}},
+                                                   'Oaky North CFR China': {'symbol':'MCBAR00','attributes':{}},
+                                                   'Illawarra FOB Australia': {'symbol':'HCIWA00','attributes':{}},
+                                                   'Illawarra CFR China': {'symbol':'MCBAH00','attributes':{}},
+                                                   'Moranbah North FOB Australia': {'symbol':'HCMOA00','attributes':{}},
+                                                   'Moranbah North CFR China': {'symbol':'MCBAG00','attributes':{}},
+                                                   'Goonyella FOB Australia': {'symbol':'HCGOA00','attributes':{}},
+                                                   'Goonyella CFR China': {'symbol':'MCBAE00','attributes':{}},
+                                                   'Peak Downs North FOB Australia': {'symbol':'HCPNA00','attributes':{}},
+                                                   'Peak Downs North CFR China': {'symbol':'MCBAJ00','attributes':{}},
+                                                   'Goonyella C FOB Australia': {'symbol':'HCGNA00','attributes':{}},
+                                                   'Goonyella C CFR China': {'symbol':'MCBAI00','attributes':{}},
+                                                   'Riverside FOB Australia': {'symbol':'HCRVA00','attributes':{}},
+                                                   'Riverside CFR China': {'symbol':'MCRVR00','attributes':{}},
+                                                   'GLV FOB Australia': {'symbol':'HCHCA00','attributes':{}},
+                                                   'GLV CFR China': {'symbol':'MCBAF00','attributes':{}}}
+
+Asia_Pacific_brand_relativities_Low_Vol_HCC = {'Lake Vermont HCC': {'symbol':'MCBAN00','attributes':{}},
+                                               'Carborough Downs': {'symbol':'MCBAO00','attributes':{}},
+                                               'Middlemount Coking': {'symbol':'MCBAP00','attributes':{}},
+                                               'Poitrel Semi Hard': {'symbol':'MCBAQ00','attributes':{}}}
+
+Dry_bulk_freight_assessments = {'Australia-China-Capesize': {'symbol':'CDANC00','attributes':{}},
+                                'Australia-Rotterdam-Capesize': {'symbol':'CDARN00','attributes':{}},
+                                'Australia-China-Panamax': {'symbol':'CDBFA00','attributes':{}},
+                                'Australia-India-Panamax': {'symbol':'CDBFAI0','attributes':{}},
+                                'USEC-India-Panamax': {'symbol':'CDBUI00','attributes':{}},
+                                'USEC-Rotterdam-Panamax': {'symbol':'CDBUR00','attributes':{}},
+                                'USEC-Brazil-Panamax': {'symbol':'CDBUB00','attributes':{}},
+                                'US Mobile-Rotterdam-Panamax': {'symbol':'CDMAR00','attributes':{}}}
 
 
-####################################################################################################
-# df_indexes = pd.DataFrame(final_report(Platts_Daily_Report_String, indexes,
-#                                        4, ['Commodity', 'Price', 'Change', 'Change %']))
-# 
-# df_indexes['Fe'] = [62, 65, 58]
-# df_indexes['moisture'] = [8, 8.5, 10]
-# df_indexes['silica'] = [4, 3.5, 5]
-# df_indexes['alumina'] = [2.25, 1, 4]
-# df_indexes['phosphorus'] = [0.02, 0.075, 0.05]
-# df_indexes['sulfur'] = [0.02, None, None]
 
-# df_lump = pd.DataFrame(final_report(Platts_Daily_Report_String, lump, 3, [
-#                        'Commodity', 'Price', 'Change']))
-# df_lump['Fe'] = [62]
-# df_lump['moisture'] = [4]
-# df_lump['silica'] = [3.5]
-# df_lump['alumina'] = [1.5]
-# df_lump['phosphorus'] = [0.075]
-# df_lump['sulfur'] = [0.02]
+df_indexes = final_report(Platts_Daily_Report_String,indexes,4)
 
-# df_pellet = pd.DataFrame(final_report(
-#     Platts_Daily_Report_String, pellet, 3, ['Commodity', 'Price', 'Change']))
-# # Adding the IODEX Price to Premiums
-# df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] = df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] + \
-#     df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
-# df_pellet.loc['Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] = df_pellet.loc[
-#     'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
-# df_pellet['Fe'] = [65, 64, 65, 67.5]
-# df_pellet['alumina'] = [0.35, 2.7, 0.5, None]
-# df_pellet['silica'] = [5, 3.5, 3, 1.5]
-# df_pellet['phosphorus'] = [0.02, 0.08, None, None]
-# df_pellet['sulfur'] = [0.003, 0.008, None, None]
-# df_pellet['CCS'] = [250, 230, 275, 300]
+df_lump = final_report(Platts_Daily_Report_String,lump,3)
 
-# df_ore_brands = pd.DataFrame(final_report(
-#     Platts_Daily_Report_String, ore_brands, 3, ['Commodity', 'Price', 'Change']))
+df_pellet = final_report(Platts_Daily_Report_String,pellet,3)
+# Adding the IODEX Price to Premiums
+df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] = df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] + \
+    df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
+df_pellet.loc['Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] = df_pellet.loc[
+    'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
 
-# df_Asia_Pacific_coking_coal = pd.DataFrame(final_report(
-#     Platts_Daily_Report_String, Asia_Pacific_coking_coal, 3, ['Commodity', 'Price', 'Change']))
+df_ore_brands = final_report(Platts_Daily_Report_String,ore_brands,3)
 
-# df_Asia_Pacific_brand_relativities_Premium_Low_Vol = pd.DataFrame(final_report(
-#     Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Premium_Low_Vol, 2, ['Commodity', 'Price']))
+df_Asia_Pacific_coking_coal = final_report(Platts_Daily_Report_String,Asia_Pacific_coking_coal,3)
 
-# df_Asia_Pacific_brand_relativities_Low_Vol_HCC = pd.DataFrame(final_report(
-#     Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Low_Vol_HCC, 2, ['Commodity', 'Price']))
+df_Asia_Pacific_brand_relativities_Premium_Low_Vol = final_report(Platts_Daily_Report_String,Asia_Pacific_brand_relativities_Premium_Low_Vol,2)
 
-# df_Dry_bulk_freight_assessments = pd.DataFrame(final_report(
-#     Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, ['Commodity', 'Price', 'Change'], second_pattern='.+'))
+df_Asia_Pacific_brand_relativities_Low_Vol_HCC = final_report(Platts_Daily_Report_String,Asia_Pacific_brand_relativities_Low_Vol_HCC,2)
 
-# # List of data frames for exporting to excel file
-# dataframe_dict = {'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
-#                   'coking_coal': df_Asia_Pacific_coking_coal,
-#                   'Premium_Coal': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
-#                   'HCC_Coal': df_Asia_Pacific_brand_relativities_Low_Vol_HCC,
-#                   'freight_assessments': df_Dry_bulk_freight_assessments}
+df_Dry_bulk_freight_assessments = final_report(Platts_Daily_Report_String,Dry_bulk_freight_assessments,3,second_pattern='.+')
 
-# excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
-# export_to_excel(excel_file_address, dataframe_dict)
-# excel_format(excel_file_address)
+# List of data frames for exporting to excel file
+dataframe_dict = {'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
+                  'coking_coal': df_Asia_Pacific_coking_coal,
+                  'Premium_Coal': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
+                  'HCC_Coal': df_Asia_Pacific_brand_relativities_Low_Vol_HCC,
+                  'freight_assessments': df_Dry_bulk_freight_assessments}
+
+excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
+export_to_excel(excel_file_address, dataframe_dict)
+excel_format(excel_file_address)
