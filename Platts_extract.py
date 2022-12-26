@@ -12,7 +12,7 @@ from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Fo
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 
-def find_commodity_price_row(Platts_String: str, commodity_symbol: str, second_pattern='\s+\d+.+')-> re.match:
+def find_commodity_price_row(Platts_String: str, commodity_symbol: str, second_pattern='\s+\d+.+') -> re.match:
     """ Finds the row corosponding to the commodity inside the daily report and returns a re.match"""
     # the pattern is based on the symbol so in the program what the  function will recive is the symbol
     # corosponding to the needed commodity
@@ -65,14 +65,14 @@ def final_report(Platts_String: str, commodity_dict: dict, needed_numbers: int,
                  second_pattern='\s+\d+.+') -> pd.DataFrame:
     """ Gets the inputs for find_commodity_price_row and extract_numbers then using these functions returns a pandas dataframe
         of the commodity price and attributes"""
-    #dataframe_index is used to create dataframes from the dictionaries and has no purpose other than that
+    # dataframe_index is used to create dataframes from the dictionaries and has no purpose other than that
     dataframe_index = 0
-    #The final dataframe created form the commodity_dict to publish
+    # The final dataframe created form the commodity_dict to publish
     complete_dataframe = pd.DataFrame()
     for commodity_name in list(commodity_dict.keys()):
-        #commodity_symbol is used to identify the relevent attributes for the commodity_name
+        # commodity_symbol is used to identify the relevent attributes for the commodity_name
         commodity_symbol = commodity_dict[commodity_name]['symbol']
-        #commodity_attributes_dict is the constructor dictionary for commodity_df
+        # commodity_attributes_dict is the constructor dictionary for commodity_df
         commodity_attributes_dict = commodity_dict[commodity_name]['attributes']
         match = find_commodity_price_row(
             Platts_String, commodity_symbol, second_pattern)
@@ -86,7 +86,7 @@ def final_report(Platts_String: str, commodity_dict: dict, needed_numbers: int,
         if needed_numbers == 4:
             commodity_attributes_dict['Change'] = numbers['Change']
             commodity_attributes_dict['Change %'] = numbers['Change %']
-        #constructing df of the commodity_name to later add it to the complete_dataframe
+        # constructing df of the commodity_name to later add it to the complete_dataframe
         commodity_df = pd.DataFrame(
             commodity_attributes_dict, index=[dataframe_index])
         commodity_df.set_index('Commodity', inplace=True)
@@ -164,7 +164,7 @@ def excel_set_border(excel_file_address: str,
     wb.save(excel_file_address)
 
 
-def excel_set_tables(excel_file_address: str, Table_Style=TableStyleInfo(name="TableStyleMedium19")):
+def excel_set_tables(excel_file_address: str, Table_Style=TableStyleInfo(name="TableStyleMedium12")):
     """ Takes the address of an excel file and defines Tables with styles"""
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
@@ -176,39 +176,38 @@ def excel_set_tables(excel_file_address: str, Table_Style=TableStyleInfo(name="T
     wb.save(excel_file_address)
 
 
-def excel_set_number_formats(excel_file_address: str):
+def excel_set_number_formats(excel_file_address: str, percentage_list = ['Fe','silica','moisture','alumina','phosphorus','sulfur'],
+                             currency_list=['Price', 'Change', 'Change %'], currency_format='"$"#,##0.00_-', percentage_format='0.00%'):
+    
+    """ Gets excel file address and two lists containing  the header names of the values that should be formatted as a percentage
+        or currency the default format for currency is dolor it searches each sheet for the header and if the item in the list is 
+        not in the sheet function simply ignores it and moves to the next sheet"""
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        # set the price and change format to currency
-        # we start row from 2 to ignore headers and we set columns 2 and 4 since range() dosent count the last number
-        # (price and change columns) to change to currenct format
-        price_column_num = 0
-        change_column_num = 0
-        change_percent_column_num = 0
+
+        currency_column_num = {}
         for j in range(1, ws.max_column+1):
             selected_cell = ws.cell(row=1, column=j)
-            if selected_cell.value == 'Price':
-                price_column_num = j
-            if selected_cell.value == 'Change':
-                change_column_num = j
-            if selected_cell.value == 'Change %':
-                change_percent_column_num = j
-        if price_column_num != 0:
+            if selected_cell.value in currency_list:
+                currency_column_num[selected_cell.value] = j
+        for column in list(currency_column_num.keys()):
             for i in range(2, ws.max_row+1):
-                selected_cell = ws.cell(row=i, column=price_column_num)
-                selected_cell.number_format = '"$"#,##0.00_-'
-        if change_column_num != 0:
+                selected_cell = ws.cell(row=i, column=currency_column_num[column])
+                selected_cell.number_format = currency_format
+
+        percentage_column_num = {}
+        for j in range(1, ws.max_column+1):
+            selected_cell = ws.cell(row=1, column=j)
+            if selected_cell.value in percentage_list:
+                percentage_column_num[selected_cell.value] = j
+        for column in list(percentage_column_num.keys()):
             for i in range(2, ws.max_row+1):
-                selected_cell = ws.cell(row=i, column=change_column_num)
-                selected_cell.number_format = '"$"#,##0.00_-'
-        if change_percent_column_num != 0:
-            for i in range(2, ws.max_row+1):
-                selected_cell = ws.cell(
-                    row=i, column=change_percent_column_num)
-                if selected_cell != None:
+                selected_cell = ws.cell(row=i, column=percentage_column_num[column])
+                if selected_cell.value !=None:
                     selected_cell.value = selected_cell.value/100.00
-                    selected_cell.number_format = '0.00%'
+                    selected_cell.number_format = percentage_format
+
     wb.save(excel_file_address)
 
 
@@ -304,118 +303,121 @@ indexes = {'IODEX 62% Fe CFR North China': {'symbol': 'IODBZ00', 'attributes': {
                                                                           'silica': 5, 'alumina': 4,
                                                                           'phosphorus': 0.075, 'sulfur': None}}}
 
-lump = {'Lump outright':{'symbol':'IOCLS00', 'attributes':{'Fe':62,'moisture':4,
-                                                           'silica':3.5,'alumina':1.5,
-                                                           'phosphorus':0.075,'sulfur':0.02}}}
+lump = {'Lump outright': {'symbol': 'IOCLS00', 'attributes': {'Fe': 62, 'moisture': 4,
+                                                              'silica': 3.5, 'alumina': 1.5,
+                                                              'phosphorus': 0.075, 'sulfur': 0.02}}}
 
-pellet = {'Weekly CFR China 65% Fe': {'symbol':'IOBFC04', 'attributes':{'Fe':65,'alumina':0.35,
-                                                                        'silica':5,'phosphorus':0.02,
-                                                                        'sulfur':0.003,'CCS':250}},
-          'Daily CFR China 63% Fe spot fixed price assessment': {'symbol':'IOCQR04', 'attributes':{'Fe':64,'alumina':2.7,
-                                                                                                   'silica':3.5,'phosphorus':0.08,
-                                                                                                   'sulfur':0.008,'CCS':230}},
-          'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil': {'symbol':'SB01095','attributes':{'Fe':65,'alumina':0.5,
-                                                                                                     'silica':3,'phosphorus':None,
-                                                                                                     'sulfur':None,'CCS':275}},
-          'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)':{'symbol':'IODBP00','attributes':{'Fe':67.5,'alumina':None,
-                                                                                                     'silica':1.5,'phosphorus':None,
-                                                                                                     'sulfur':None,'CCS':300}}}
+pellet = {'Weekly CFR China 65% Fe': {'symbol': 'IOBFC04', 'attributes': {'Fe': 65, 'alumina': 0.35,
+                                                                          'silica': 5, 'phosphorus': 0.02,
+                                                                          'sulfur': 0.003, 'CCS': 250}},
+          'Daily CFR China 63% Fe spot fixed price assessment': {'symbol': 'IOCQR04', 'attributes': {'Fe': 64, 'alumina': 2.7,
+                                                                                                     'silica': 3.5, 'phosphorus': 0.08,
+                                                                                                     'sulfur': 0.008, 'CCS': 230}},
+          'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil': {'symbol': 'SB01095', 'attributes': {'Fe': 65, 'alumina': 0.5,
+                                                                                                        'silica': 3, 'phosphorus': None,
+                                                                                                        'sulfur': None, 'CCS': 275}},
+          'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)': {'symbol': 'IODBP00', 'attributes': {'Fe': 67.5, 'alumina': None,
+                                                                                                          'silica': 1.5, 'phosphorus': None,
+                                                                                                          'sulfur': None, 'CCS': 300}}}
 
-ore_brands = {'Pilbara Blend Fines (PBF) CFR Qingdao':{'symbol':'IOPBQ00','attributes': {'Fe': 62, 'moisture': 8,
-                                                                                'silica': 4, 'alumina': 2.25,
-                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
-              'Brazilian Blend Fines (BRBF) CFR Qingdao':{'symbol':'IOBBA00','attributes': {'Fe': 62, 'moisture': 8,
-                                                                                'silica': 4, 'alumina': 2.25,
-                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
-              'Newman High Grade Fines (NHGF) CFR Qingdao':{'symbol':'IONHA00','attributes': {'Fe': 62, 'moisture': 8,
-                                                                                'silica': 4, 'alumina': 2.25,
-                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
-              'Mining Area C Fines (MACF) CFR Qingdao':{'symbol':'IOMAA00','attributes': {'Fe': 62, 'moisture': 8,
-                                                                                'silica': 4, 'alumina': 2.25,
-                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
-              'Jimblebar Fines (JMBF) CFR Qingdao':{'symbol':'IOJBA00','attributes': {'Fe': 62, 'moisture': 8,
-                                                                                'silica': 4, 'alumina': 2.25,
-                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
-              '57% Fe Yandi Fines (YDF) CFR Qingdao':{'symbol':'IOYFA00','attributes': {'Fe': 57, 'moisture': 10,
-                                                                                        'silica': 5, 'alumina': 4,
-                                                                                        'phosphorus': 0.075, 'sulfur': None}}}
+ore_brands = {'Pilbara Blend Fines (PBF) CFR Qingdao': {'symbol': 'IOPBQ00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                            'silica': 4, 'alumina': 2.25,
+                                                                                            'phosphorus': 0.02, 'sulfur': 0.02}},
+              'Brazilian Blend Fines (BRBF) CFR Qingdao': {'symbol': 'IOBBA00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                               'silica': 4, 'alumina': 2.25,
+                                                                                               'phosphorus': 0.02, 'sulfur': 0.02}},
+              'Newman High Grade Fines (NHGF) CFR Qingdao': {'symbol': 'IONHA00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                                 'silica': 4, 'alumina': 2.25,
+                                                                                                 'phosphorus': 0.02, 'sulfur': 0.02}},
+              'Mining Area C Fines (MACF) CFR Qingdao': {'symbol': 'IOMAA00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                             'silica': 4, 'alumina': 2.25,
+                                                                                             'phosphorus': 0.02, 'sulfur': 0.02}},
+              'Jimblebar Fines (JMBF) CFR Qingdao': {'symbol': 'IOJBA00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                         'silica': 4, 'alumina': 2.25,
+                                                                                         'phosphorus': 0.02, 'sulfur': 0.02}},
+              '57% Fe Yandi Fines (YDF) CFR Qingdao': {'symbol': 'IOYFA00', 'attributes': {'Fe': 57, 'moisture': 10,
+                                                                                           'silica': 5, 'alumina': 4,
+                                                                                           'phosphorus': 0.075, 'sulfur': None}}}
 
-Asia_Pacific_coking_coal = {'HCC Peak Downs Region FOB Australia':{'symbol':'HCCGA00','attributes':{}},
-                            'HCC Peak Downs Region CFR China': {'symbol':'HCCGC00','attributes':{}},
-                            'HCC Peak Downs Region CFR India': {'symbol':'HCCGI00','attributes':{}},
-                            'Premium Low Vol FOB Australia': {'symbol':'PLVHA00','attributes':{}},
-                            'Premium Low Vol CFR China': {'symbol':'PLVHC00','attributes':{}},
-                            'Premium Low Vol CFR India': {'symbol':'PLVHI00','attributes':{}},
-                            'Low Vol HCC FOB Australia': {'symbol':'HCCAU00','attributes':{}},
-                            'Low Vol HCC CFR China': {'symbol':'HCCCH00','attributes':{}},
-                            'Low Vol HCC CFR India': {'symbol':'HCCIN00','attributes':{}},
-                            'Low Vol PCI FOB Australia': {'symbol':'MCLVA00','attributes':{}},
-                            'Low Vol PCI CFR China': {'symbol':'MCLVC00','attributes':{}},
-                            'Low Vol PCI CFR India': {'symbol':'MCLVI00','attributes':{}},
-                            'Mid Vol PCI FOB Australia': {'symbol':'MCLAA00','attributes':{}},
-                            'Mid Vol PCI CFR China': {'symbol':'MCLAC00','attributes':{}},
-                            'Mid Vol PCI CFR India': {'symbol':'MCVAI00','attributes':{}},
-                            'Semi Soft FOB Australia': {'symbol':'MCSSA00','attributes':{}},
-                            'Semi Soft CFR China': {'symbol':'MCSSC00','attributes':{}},
-                            'Semi Soft CFR India': {'symbol':'MCSSI00','attributes':{}}}
+Asia_Pacific_coking_coal = {'HCC Peak Downs Region FOB Australia': {'symbol': 'HCCGA00', 'attributes': {}},
+                            'HCC Peak Downs Region CFR China': {'symbol': 'HCCGC00', 'attributes': {}},
+                            'HCC Peak Downs Region CFR India': {'symbol': 'HCCGI00', 'attributes': {}},
+                            'Premium Low Vol FOB Australia': {'symbol': 'PLVHA00', 'attributes': {}},
+                            'Premium Low Vol CFR China': {'symbol': 'PLVHC00', 'attributes': {}},
+                            'Premium Low Vol CFR India': {'symbol': 'PLVHI00', 'attributes': {}},
+                            'Low Vol HCC FOB Australia': {'symbol': 'HCCAU00', 'attributes': {}},
+                            'Low Vol HCC CFR China': {'symbol': 'HCCCH00', 'attributes': {}},
+                            'Low Vol HCC CFR India': {'symbol': 'HCCIN00', 'attributes': {}},
+                            'Low Vol PCI FOB Australia': {'symbol': 'MCLVA00', 'attributes': {}},
+                            'Low Vol PCI CFR China': {'symbol': 'MCLVC00', 'attributes': {}},
+                            'Low Vol PCI CFR India': {'symbol': 'MCLVI00', 'attributes': {}},
+                            'Mid Vol PCI FOB Australia': {'symbol': 'MCLAA00', 'attributes': {}},
+                            'Mid Vol PCI CFR China': {'symbol': 'MCLAC00', 'attributes': {}},
+                            'Mid Vol PCI CFR India': {'symbol': 'MCVAI00', 'attributes': {}},
+                            'Semi Soft FOB Australia': {'symbol': 'MCSSA00', 'attributes': {}},
+                            'Semi Soft CFR China': {'symbol': 'MCSSC00', 'attributes': {}},
+                            'Semi Soft CFR India': {'symbol': 'MCSSI00', 'attributes': {}}}
 
-Asia_Pacific_brand_relativities_Premium_Low_Vol = {'Peak Downs FOB Australia': {'symbol':'HCPDA00','attributes':{}},
-                                                   'Peak Downs CFR China': {'symbol':'MCBAA00','attributes':{}},
-                                                   'Saraji FOB Australia': {'symbol':'HCSAA00','attributes':{}},
-                                                   'Saraji CFR China': {'symbol':'MCBAB00','attributes':{}},
-                                                   'Oaky North FOB Australia': {'symbol':'HCOKA00','attributes':{}},
-                                                   'Oaky North CFR China': {'symbol':'MCBAR00','attributes':{}},
-                                                   'Illawarra FOB Australia': {'symbol':'HCIWA00','attributes':{}},
-                                                   'Illawarra CFR China': {'symbol':'MCBAH00','attributes':{}},
-                                                   'Moranbah North FOB Australia': {'symbol':'HCMOA00','attributes':{}},
-                                                   'Moranbah North CFR China': {'symbol':'MCBAG00','attributes':{}},
-                                                   'Goonyella FOB Australia': {'symbol':'HCGOA00','attributes':{}},
-                                                   'Goonyella CFR China': {'symbol':'MCBAE00','attributes':{}},
-                                                   'Peak Downs North FOB Australia': {'symbol':'HCPNA00','attributes':{}},
-                                                   'Peak Downs North CFR China': {'symbol':'MCBAJ00','attributes':{}},
-                                                   'Goonyella C FOB Australia': {'symbol':'HCGNA00','attributes':{}},
-                                                   'Goonyella C CFR China': {'symbol':'MCBAI00','attributes':{}},
-                                                   'Riverside FOB Australia': {'symbol':'HCRVA00','attributes':{}},
-                                                   'Riverside CFR China': {'symbol':'MCRVR00','attributes':{}},
-                                                   'GLV FOB Australia': {'symbol':'HCHCA00','attributes':{}},
-                                                   'GLV CFR China': {'symbol':'MCBAF00','attributes':{}}}
+Asia_Pacific_brand_relativities_Premium_Low_Vol = {'Peak Downs FOB Australia': {'symbol': 'HCPDA00', 'attributes': {}},
+                                                   'Peak Downs CFR China': {'symbol': 'MCBAA00', 'attributes': {}},
+                                                   'Saraji FOB Australia': {'symbol': 'HCSAA00', 'attributes': {}},
+                                                   'Saraji CFR China': {'symbol': 'MCBAB00', 'attributes': {}},
+                                                   'Oaky North FOB Australia': {'symbol': 'HCOKA00', 'attributes': {}},
+                                                   'Oaky North CFR China': {'symbol': 'MCBAR00', 'attributes': {}},
+                                                   'Illawarra FOB Australia': {'symbol': 'HCIWA00', 'attributes': {}},
+                                                   'Illawarra CFR China': {'symbol': 'MCBAH00', 'attributes': {}},
+                                                   'Moranbah North FOB Australia': {'symbol': 'HCMOA00', 'attributes': {}},
+                                                   'Moranbah North CFR China': {'symbol': 'MCBAG00', 'attributes': {}},
+                                                   'Goonyella FOB Australia': {'symbol': 'HCGOA00', 'attributes': {}},
+                                                   'Goonyella CFR China': {'symbol': 'MCBAE00', 'attributes': {}},
+                                                   'Peak Downs North FOB Australia': {'symbol': 'HCPNA00', 'attributes': {}},
+                                                   'Peak Downs North CFR China': {'symbol': 'MCBAJ00', 'attributes': {}},
+                                                   'Goonyella C FOB Australia': {'symbol': 'HCGNA00', 'attributes': {}},
+                                                   'Goonyella C CFR China': {'symbol': 'MCBAI00', 'attributes': {}},
+                                                   'Riverside FOB Australia': {'symbol': 'HCRVA00', 'attributes': {}},
+                                                   'Riverside CFR China': {'symbol': 'MCRVR00', 'attributes': {}},
+                                                   'GLV FOB Australia': {'symbol': 'HCHCA00', 'attributes': {}},
+                                                   'GLV CFR China': {'symbol': 'MCBAF00', 'attributes': {}}}
 
-Asia_Pacific_brand_relativities_Low_Vol_HCC = {'Lake Vermont HCC': {'symbol':'MCBAN00','attributes':{}},
-                                               'Carborough Downs': {'symbol':'MCBAO00','attributes':{}},
-                                               'Middlemount Coking': {'symbol':'MCBAP00','attributes':{}},
-                                               'Poitrel Semi Hard': {'symbol':'MCBAQ00','attributes':{}}}
+Asia_Pacific_brand_relativities_Low_Vol_HCC = {'Lake Vermont HCC': {'symbol': 'MCBAN00', 'attributes': {}},
+                                               'Carborough Downs': {'symbol': 'MCBAO00', 'attributes': {}},
+                                               'Middlemount Coking': {'symbol': 'MCBAP00', 'attributes': {}},
+                                               'Poitrel Semi Hard': {'symbol': 'MCBAQ00', 'attributes': {}}}
 
-Dry_bulk_freight_assessments = {'Australia-China-Capesize': {'symbol':'CDANC00','attributes':{}},
-                                'Australia-Rotterdam-Capesize': {'symbol':'CDARN00','attributes':{}},
-                                'Australia-China-Panamax': {'symbol':'CDBFA00','attributes':{}},
-                                'Australia-India-Panamax': {'symbol':'CDBFAI0','attributes':{}},
-                                'USEC-India-Panamax': {'symbol':'CDBUI00','attributes':{}},
-                                'USEC-Rotterdam-Panamax': {'symbol':'CDBUR00','attributes':{}},
-                                'USEC-Brazil-Panamax': {'symbol':'CDBUB00','attributes':{}},
-                                'US Mobile-Rotterdam-Panamax': {'symbol':'CDMAR00','attributes':{}}}
+Dry_bulk_freight_assessments = {'Australia-China-Capesize': {'symbol': 'CDANC00', 'attributes': {}},
+                                'Australia-Rotterdam-Capesize': {'symbol': 'CDARN00', 'attributes': {}},
+                                'Australia-China-Panamax': {'symbol': 'CDBFA00', 'attributes': {}},
+                                'Australia-India-Panamax': {'symbol': 'CDBFAI0', 'attributes': {}},
+                                'USEC-India-Panamax': {'symbol': 'CDBUI00', 'attributes': {}},
+                                'USEC-Rotterdam-Panamax': {'symbol': 'CDBUR00', 'attributes': {}},
+                                'USEC-Brazil-Panamax': {'symbol': 'CDBUB00', 'attributes': {}},
+                                'US Mobile-Rotterdam-Panamax': {'symbol': 'CDMAR00', 'attributes': {}}}
 
 
+df_indexes = final_report(Platts_Daily_Report_String, indexes, 4)
 
-df_indexes = final_report(Platts_Daily_Report_String,indexes,4)
+df_lump = final_report(Platts_Daily_Report_String, lump, 3)
 
-df_lump = final_report(Platts_Daily_Report_String,lump,3)
-
-df_pellet = final_report(Platts_Daily_Report_String,pellet,3)
+df_pellet = final_report(Platts_Daily_Report_String, pellet, 3)
 # Adding the IODEX Price to Premiums
 df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] = df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] + \
     df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
 df_pellet.loc['Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] = df_pellet.loc[
     'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
 
-df_ore_brands = final_report(Platts_Daily_Report_String,ore_brands,3)
+df_ore_brands = final_report(Platts_Daily_Report_String, ore_brands, 3)
 
-df_Asia_Pacific_coking_coal = final_report(Platts_Daily_Report_String,Asia_Pacific_coking_coal,3)
+df_Asia_Pacific_coking_coal = final_report(
+    Platts_Daily_Report_String, Asia_Pacific_coking_coal, 3)
 
-df_Asia_Pacific_brand_relativities_Premium_Low_Vol = final_report(Platts_Daily_Report_String,Asia_Pacific_brand_relativities_Premium_Low_Vol,2)
+df_Asia_Pacific_brand_relativities_Premium_Low_Vol = final_report(
+    Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Premium_Low_Vol, 2)
 
-df_Asia_Pacific_brand_relativities_Low_Vol_HCC = final_report(Platts_Daily_Report_String,Asia_Pacific_brand_relativities_Low_Vol_HCC,2)
+df_Asia_Pacific_brand_relativities_Low_Vol_HCC = final_report(
+    Platts_Daily_Report_String, Asia_Pacific_brand_relativities_Low_Vol_HCC, 2)
 
-df_Dry_bulk_freight_assessments = final_report(Platts_Daily_Report_String,Dry_bulk_freight_assessments,3,second_pattern='.+')
+df_Dry_bulk_freight_assessments = final_report(
+    Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, second_pattern='.+')
 
 # List of data frames for exporting to excel file
 dataframe_dict = {'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
