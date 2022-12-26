@@ -51,11 +51,11 @@ def extract_numbers(out_match: re.match,index: int)-> dict:
         in_list.remove('.')
     # turning the list of strings into float
     in_list = [float(x) for x in in_list]
-    if index ==1:
-        result = {'Price':in_list[0]}
     if index ==2:
-        result = {'Price':in_list[0],'Change':in_list[1]}
+        result = {'Price':in_list[0]}
     if index ==3:
+        result = {'Price':in_list[0],'Change':in_list[1]}
+    if index ==4:
         result = {'Price':in_list[0],'Change':in_list[1],'Change %':in_list[2]}
     return result
 
@@ -95,21 +95,26 @@ def final_report(Platts_String: str, commodity: dict, index: int, headers: list,
 
 def final_final_report(Platts_String: str, commodity_dict: dict,index: int,
                        second_pattern='\s+\d+.+')-> pd.DataFrame:
-
-    dataframe = pd.DataFrame(columns=commodity_dict['attributes'])
+    
+    first_key = list(commodity_dict.keys())[0]
+    df_columns = list(commodity_dict[first_key]['attributes'])
+    df_columns.insert(0,'Commodity')
+    dataframe = pd.DataFrame(columns=df_columns)
+    for column in df_columns:
+        dataframe[column] = []
     for commodity_name in list(commodity_dict.keys()):
         commodity_symbol = commodity_dict[commodity_name]['symbol']
         match = find_commodity_price_row(Platts_String,commodity_symbol,second_pattern)
         numbers = extract_numbers(match, index)
         #assigning commodity name which is used as index
-        dataframe['Commodity'] = commodity_name
+        dataframe['Commodity'].append(commodity_name)
         #assigning extracted numbers
-        dataframe['Price'] = numbers['Price']
-        if index ==2:
-            dataframe['Change'] = numbers['Change']
+        dataframe['Price'].append(numbers['Price'])
         if index ==3:
-            dataframe['Change'] = numbers['Change']
-            dataframe['Change %'] = numbers['Change %']
+            dataframe['Change'].append(numbers['Change'])
+        if index ==4:
+            dataframe['Change'].append(numbers['Change'])
+            dataframe['Change %'].append(numbers['Change %'])
     return dataframe
         
 
