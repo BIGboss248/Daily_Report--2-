@@ -96,6 +96,22 @@ def final_report(Platts_String: str, commodity_dict: dict, needed_numbers: int,
     return complete_dataframe
 
 
+def translate_report(dataframe: pd.DataFrame, persian_dict: dict):
+    new_column_names = []
+    new_indexes = {}
+    for column_name in dataframe.columns:
+        persian_word = persian_dict[column_name]
+        new_column_names.append(persian_word)
+    dataframe.columns = new_column_names
+    new_index = persian_dict[dataframe.index.name]
+    dataframe.index.name = new_index
+    for i in range(len(dataframe.index)):
+        translated = persian_dict[dataframe.index[i]]
+        new_indexes[dataframe.index[i]] = translated
+    dataframe.rename(index=new_indexes,inplace=True)
+    return dataframe
+
+
 def get_Volume_Issue_Date(Platts_String: str):
     """gets the file string returns a list first one will be the volume second the issue number and third a date object"""
     pattern = re.compile(r'Volume.+')
@@ -176,9 +192,8 @@ def excel_set_tables(excel_file_address: str, Table_Style=TableStyleInfo(name="T
     wb.save(excel_file_address)
 
 
-def excel_set_number_formats(excel_file_address: str, percentage_list = ['Fe','silica','moisture','alumina','phosphorus','sulfur'],
+def excel_set_number_formats(excel_file_address: str, percentage_list=['Fe', 'silica', 'moisture', 'alumina', 'phosphorus', 'sulfur'],
                              currency_list=['Price', 'Change', 'Change %'], currency_format='"$"#,##0.00_-', percentage_format='0.00%'):
-    
     """ Gets excel file address and two lists containing  the header names of the values that should be formatted as a percentage
         or currency the default format for currency is dolor it searches each sheet for the header and if the item in the list is 
         not in the sheet function simply ignores it and moves to the next sheet"""
@@ -193,7 +208,8 @@ def excel_set_number_formats(excel_file_address: str, percentage_list = ['Fe','s
                 currency_column_num[selected_cell.value] = j
         for column in list(currency_column_num.keys()):
             for i in range(2, ws.max_row+1):
-                selected_cell = ws.cell(row=i, column=currency_column_num[column])
+                selected_cell = ws.cell(
+                    row=i, column=currency_column_num[column])
                 selected_cell.number_format = currency_format
 
         percentage_column_num = {}
@@ -203,8 +219,9 @@ def excel_set_number_formats(excel_file_address: str, percentage_list = ['Fe','s
                 percentage_column_num[selected_cell.value] = j
         for column in list(percentage_column_num.keys()):
             for i in range(2, ws.max_row+1):
-                selected_cell = ws.cell(row=i, column=percentage_column_num[column])
-                if selected_cell.value !=None:
+                selected_cell = ws.cell(
+                    row=i, column=percentage_column_num[column])
+                if selected_cell.value != None:
                     selected_cell.value = selected_cell.value/100.00
                     selected_cell.number_format = percentage_format
 
@@ -216,13 +233,13 @@ def excel_set_column_width(excel_file_address: str):
     for sheet in wb.sheetnames:
         ws = wb[sheet]
         # Set column width to auto size
-        for i in string.ascii_uppercase:
+        for column_letter in string.ascii_uppercase:
             max_width = 0
             for row in range(1, ws.max_row+1):
-                row_len = len(str(ws[f'{i}{row}'].value))
+                row_len = len(str(ws[f'{column_letter}{row}'].value))
                 if row_len > max_width:
                     max_width = row_len
-            ws.column_dimensions[i].width = max_width + 13
+            ws.column_dimensions[column_letter].width = max_width + 13
     wb.save(excel_file_address)
 
 
@@ -294,112 +311,112 @@ Platts_Daily_Report_File.close()
 
 # list of commoditys
 indexes = {
-'IODEX 62% Fe CFR North China': {'symbol': 'IODBZ00', 'attributes': {'Fe': 62, 'moisture': 8,
-                                                                                'silica': 4, 'alumina': 2.25,
-                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
-'65% Fe CFR North China': {'symbol': 'IOPRM00', 'attributes': {'Fe': 65, 'moisture': 8.5,
-                                                                'silica': 3.5, 'alumina': 1,
-                                                                'phosphorus': 0.075, 'sulfur': None}},
-'58% Fe CFR North China': {'symbol': 'IODFE00', 'attributes': {'Fe': 58, 'moisture': 10,
-                                                                'silica': 5, 'alumina': 4,
-                                                                'phosphorus': 0.075, 'sulfur': None}}}
+    'IODEX 62% Fe CFR North China': {'symbol': 'IODBZ00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                         'silica': 4, 'alumina': 2.25,
+                                                                         'phosphorus': 0.02, 'sulfur': 0.02}},
+    '65% Fe CFR North China': {'symbol': 'IOPRM00', 'attributes': {'Fe': 65, 'moisture': 8.5,
+                                                                   'silica': 3.5, 'alumina': 1,
+                                                                   'phosphorus': 0.075, 'sulfur': None}},
+    '58% Fe CFR North China': {'symbol': 'IODFE00', 'attributes': {'Fe': 58, 'moisture': 10,
+                                                                   'silica': 5, 'alumina': 4,
+                                                                   'phosphorus': 0.075, 'sulfur': None}}}
 
 lump = {
-'Lump outright': {'symbol': 'IOCLS00', 'attributes': {'Fe': 62, 'moisture': 4,
-                                                              'silica': 3.5, 'alumina': 1.5,
-                                                              'phosphorus': 0.075, 'sulfur': 0.02}}}
+    'Lump outright': {'symbol': 'IOCLS00', 'attributes': {'Fe': 62, 'moisture': 4,
+                                                          'silica': 3.5, 'alumina': 1.5,
+                                                          'phosphorus': 0.075, 'sulfur': 0.02}}}
 
 pellet = {
-'Weekly CFR China 65% Fe': {'symbol': 'IOBFC04', 'attributes': {'Fe': 65, 'alumina': 0.35,
-                                                                          'silica': 5, 'phosphorus': 0.02,
-                                                                          'sulfur': 0.003, 'CCS': 250}},
-'Daily CFR China 63% Fe spot fixed price assessment': {'symbol': 'IOCQR04', 'attributes': {'Fe': 64, 'alumina': 2.7,
-                                                                                            'silica': 3.5, 'phosphorus': 0.08,
-                                                                                            'sulfur': 0.008, 'CCS': 230}},
-'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil': {'symbol': 'SB01095', 'attributes': {'Fe': 65, 'alumina': 0.5,
-                                                                                            'silica': 3, 'phosphorus': None,
-                                                                                            'sulfur': None, 'CCS': 275}},
-'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)': {'symbol': 'IODBP00', 'attributes': {'Fe': 67.5, 'alumina': None,
-                                                                                                'silica': 1.5, 'phosphorus': None,
-                                                                                                'sulfur': None, 'CCS': 300}}}
+    'Weekly CFR China 65% Fe': {'symbol': 'IOBFC04', 'attributes': {'Fe': 65, 'alumina': 0.35,
+                                                                    'silica': 5, 'phosphorus': 0.02,
+                                                                    'sulfur': 0.003, 'CCS': 250}},
+    'Daily CFR China 63% Fe spot fixed price assessment': {'symbol': 'IOCQR04', 'attributes': {'Fe': 64, 'alumina': 2.7,
+                                                                                               'silica': 3.5, 'phosphorus': 0.08,
+                                                                                               'sulfur': 0.008, 'CCS': 230}},
+    'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil': {'symbol': 'SB01095', 'attributes': {'Fe': 65, 'alumina': 0.5,
+                                                                                                  'silica': 3, 'phosphorus': None,
+                                                                                                  'sulfur': None, 'CCS': 275}},
+    'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)': {'symbol': 'IODBP00', 'attributes': {'Fe': 67.5, 'alumina': None,
+                                                                                                    'silica': 1.5, 'phosphorus': None,
+                                                                                                    'sulfur': None, 'CCS': 300}}}
 
 ore_brands = {
-'Pilbara Blend Fines (PBF) CFR Qingdao': {'symbol': 'IOPBQ00', 'attributes': {'Fe': 62, 'moisture': 8,
-                                                                              'silica': 4, 'alumina': 2.25,
-                                                                              'phosphorus': 0.02, 'sulfur': 0.02}},
-'Brazilian Blend Fines (BRBF) CFR Qingdao': {'symbol': 'IOBBA00', 'attributes': {'Fe': 62, 'moisture': 8,
-                                                                                'silica': 4, 'alumina': 2.25,
-                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
-'Newman High Grade Fines (NHGF) CFR Qingdao': {'symbol': 'IONHA00', 'attributes': {'Fe': 62, 'moisture': 8,
-                                                                                    'silica': 4, 'alumina': 2.25,
-                                                                                    'phosphorus': 0.02, 'sulfur': 0.02}},
-'Mining Area C Fines (MACF) CFR Qingdao': {'symbol': 'IOMAA00', 'attributes': {'Fe': 62, 'moisture': 8,
-                                                                                'silica': 4, 'alumina': 2.25,
-                                                                                'phosphorus': 0.02, 'sulfur': 0.02}},
-'Jimblebar Fines (JMBF) CFR Qingdao': {'symbol': 'IOJBA00', 'attributes': {'Fe': 62, 'moisture': 8,
-                                                                            'silica': 4, 'alumina': 2.25,
-                                                                            'phosphorus': 0.02, 'sulfur': 0.02}},
-'57% Fe Yandi Fines (YDF) CFR Qingdao': {'symbol': 'IOYFA00', 'attributes': {'Fe': 57, 'moisture': 10,
-                                                                                           'silica': 5, 'alumina': 4,
+    'Pilbara Blend Fines (PBF) CFR Qingdao': {'symbol': 'IOPBQ00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                  'silica': 4, 'alumina': 2.25,
+                                                                                  'phosphorus': 0.02, 'sulfur': 0.02}},
+    'Brazilian Blend Fines (BRBF) CFR Qingdao': {'symbol': 'IOBBA00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                     'silica': 4, 'alumina': 2.25,
+                                                                                     'phosphorus': 0.02, 'sulfur': 0.02}},
+    'Newman High Grade Fines (NHGF) CFR Qingdao': {'symbol': 'IONHA00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                       'silica': 4, 'alumina': 2.25,
+                                                                                       'phosphorus': 0.02, 'sulfur': 0.02}},
+    'Mining Area C Fines (MACF) CFR Qingdao': {'symbol': 'IOMAA00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                                   'silica': 4, 'alumina': 2.25,
+                                                                                   'phosphorus': 0.02, 'sulfur': 0.02}},
+    'Jimblebar Fines (JMBF) CFR Qingdao': {'symbol': 'IOJBA00', 'attributes': {'Fe': 62, 'moisture': 8,
+                                                                               'silica': 4, 'alumina': 2.25,
+                                                                               'phosphorus': 0.02, 'sulfur': 0.02}},
+    '57% Fe Yandi Fines (YDF) CFR Qingdao': {'symbol': 'IOYFA00', 'attributes': {'Fe': 57, 'moisture': 10,
+                                                                                 'silica': 5, 'alumina': 4,
                                                                                            'phosphorus': 0.075, 'sulfur': None}}}
 
 Asia_Pacific_coking_coal = {
-'HCC Peak Downs Region FOB Australia': {'symbol': 'HCCGA00', 'attributes': {}},
-'HCC Peak Downs Region CFR China': {'symbol': 'HCCGC00', 'attributes': {}},
-'HCC Peak Downs Region CFR India': {'symbol': 'HCCGI00', 'attributes': {}},
-'Premium Low Vol FOB Australia': {'symbol': 'PLVHA00', 'attributes': {}},
-'Premium Low Vol CFR China': {'symbol': 'PLVHC00', 'attributes': {}},
-'Premium Low Vol CFR India': {'symbol': 'PLVHI00', 'attributes': {}},
-'Low Vol HCC FOB Australia': {'symbol': 'HCCAU00', 'attributes': {}},
-'Low Vol HCC CFR China': {'symbol': 'HCCCH00', 'attributes': {}},
-'Low Vol HCC CFR India': {'symbol': 'HCCIN00', 'attributes': {}},
-'Low Vol PCI FOB Australia': {'symbol': 'MCLVA00', 'attributes': {}},
-'Low Vol PCI CFR China': {'symbol': 'MCLVC00', 'attributes': {}},
-'Low Vol PCI CFR India': {'symbol': 'MCLVI00', 'attributes': {}},
-'Mid Vol PCI FOB Australia': {'symbol': 'MCLAA00', 'attributes': {}},
-'Mid Vol PCI CFR China': {'symbol': 'MCLAC00', 'attributes': {}},
-'Mid Vol PCI CFR India': {'symbol': 'MCVAI00', 'attributes': {}},
-'Semi Soft FOB Australia': {'symbol': 'MCSSA00', 'attributes': {}},
-'Semi Soft CFR China': {'symbol': 'MCSSC00', 'attributes': {}},
-'Semi Soft CFR India': {'symbol': 'MCSSI00', 'attributes': {}}}
+    'HCC Peak Downs Region FOB Australia': {'symbol': 'HCCGA00', 'attributes': {}},
+    'HCC Peak Downs Region CFR China': {'symbol': 'HCCGC00', 'attributes': {}},
+    'HCC Peak Downs Region CFR India': {'symbol': 'HCCGI00', 'attributes': {}},
+    'Premium Low Vol FOB Australia': {'symbol': 'PLVHA00', 'attributes': {}},
+    'Premium Low Vol CFR China': {'symbol': 'PLVHC00', 'attributes': {}},
+    'Premium Low Vol CFR India': {'symbol': 'PLVHI00', 'attributes': {}},
+    'Low Vol HCC FOB Australia': {'symbol': 'HCCAU00', 'attributes': {}},
+    'Low Vol HCC CFR China': {'symbol': 'HCCCH00', 'attributes': {}},
+    'Low Vol HCC CFR India': {'symbol': 'HCCIN00', 'attributes': {}},
+    'Low Vol PCI FOB Australia': {'symbol': 'MCLVA00', 'attributes': {}},
+    'Low Vol PCI CFR China': {'symbol': 'MCLVC00', 'attributes': {}},
+    'Low Vol PCI CFR India': {'symbol': 'MCLVI00', 'attributes': {}},
+    'Mid Vol PCI FOB Australia': {'symbol': 'MCLAA00', 'attributes': {}},
+    'Mid Vol PCI CFR China': {'symbol': 'MCLAC00', 'attributes': {}},
+    'Mid Vol PCI CFR India': {'symbol': 'MCVAI00', 'attributes': {}},
+    'Semi Soft FOB Australia': {'symbol': 'MCSSA00', 'attributes': {}},
+    'Semi Soft CFR China': {'symbol': 'MCSSC00', 'attributes': {}},
+    'Semi Soft CFR India': {'symbol': 'MCSSI00', 'attributes': {}}}
 
 Asia_Pacific_brand_relativities_Premium_Low_Vol = {
-'Peak Downs FOB Australia': {'symbol': 'HCPDA00', 'attributes': {}},
-'Peak Downs CFR China': {'symbol': 'MCBAA00', 'attributes': {}},
-'Saraji FOB Australia': {'symbol': 'HCSAA00', 'attributes': {}},
-'Saraji CFR China': {'symbol': 'MCBAB00', 'attributes': {}},
-'Oaky North FOB Australia': {'symbol': 'HCOKA00', 'attributes': {}},
-'Oaky North CFR China': {'symbol': 'MCBAR00', 'attributes': {}},
-'Illawarra FOB Australia': {'symbol': 'HCIWA00', 'attributes': {}},
-'Illawarra CFR China': {'symbol': 'MCBAH00', 'attributes': {}},
-'Moranbah North FOB Australia': {'symbol': 'HCMOA00', 'attributes': {}},
-'Moranbah North CFR China': {'symbol': 'MCBAG00', 'attributes': {}},
-'Goonyella FOB Australia': {'symbol': 'HCGOA00', 'attributes': {}},
-'Goonyella CFR China': {'symbol': 'MCBAE00', 'attributes': {}},
-'Peak Downs North FOB Australia': {'symbol': 'HCPNA00', 'attributes': {}},
-'Peak Downs North CFR China': {'symbol': 'MCBAJ00', 'attributes': {}},
-'Goonyella C FOB Australia': {'symbol': 'HCGNA00', 'attributes': {}},
-'Goonyella C CFR China': {'symbol': 'MCBAI00', 'attributes': {}},
-'Riverside FOB Australia': {'symbol': 'HCRVA00', 'attributes': {}},
-'Riverside CFR China': {'symbol': 'MCRVR00', 'attributes': {}},
-'GLV FOB Australia': {'symbol': 'HCHCA00', 'attributes': {}},
-'GLV CFR China': {'symbol': 'MCBAF00', 'attributes': {}}}
+    'Peak Downs FOB Australia': {'symbol': 'HCPDA00', 'attributes': {}},
+    'Peak Downs CFR China': {'symbol': 'MCBAA00', 'attributes': {}},
+    'Saraji FOB Australia': {'symbol': 'HCSAA00', 'attributes': {}},
+    'Saraji CFR China': {'symbol': 'MCBAB00', 'attributes': {}},
+    'Oaky North FOB Australia': {'symbol': 'HCOKA00', 'attributes': {}},
+    'Oaky North CFR China': {'symbol': 'MCBAR00', 'attributes': {}},
+    'Illawarra FOB Australia': {'symbol': 'HCIWA00', 'attributes': {}},
+    'Illawarra CFR China': {'symbol': 'MCBAH00', 'attributes': {}},
+    'Moranbah North FOB Australia': {'symbol': 'HCMOA00', 'attributes': {}},
+    'Moranbah North CFR China': {'symbol': 'MCBAG00', 'attributes': {}},
+    'Goonyella FOB Australia': {'symbol': 'HCGOA00', 'attributes': {}},
+    'Goonyella CFR China': {'symbol': 'MCBAE00', 'attributes': {}},
+    'Peak Downs North FOB Australia': {'symbol': 'HCPNA00', 'attributes': {}},
+    'Peak Downs North CFR China': {'symbol': 'MCBAJ00', 'attributes': {}},
+    'Goonyella C FOB Australia': {'symbol': 'HCGNA00', 'attributes': {}},
+    'Goonyella C CFR China': {'symbol': 'MCBAI00', 'attributes': {}},
+    'Riverside FOB Australia': {'symbol': 'HCRVA00', 'attributes': {}},
+    'Riverside CFR China': {'symbol': 'MCRVR00', 'attributes': {}},
+    'GLV FOB Australia': {'symbol': 'HCHCA00', 'attributes': {}},
+    'GLV CFR China': {'symbol': 'MCBAF00', 'attributes': {}}}
 
 Asia_Pacific_brand_relativities_Low_Vol_HCC = {
-'Lake Vermont HCC': {'symbol': 'MCBAN00', 'attributes': {}},
-'Carborough Downs': {'symbol': 'MCBAO00', 'attributes': {}},
-'Middlemount Coking': {'symbol': 'MCBAP00', 'attributes': {}},
-'Poitrel Semi Hard': {'symbol': 'MCBAQ00', 'attributes': {}}}
+    'Lake Vermont HCC': {'symbol': 'MCBAN00', 'attributes': {}},
+    'Carborough Downs': {'symbol': 'MCBAO00', 'attributes': {}},
+    'Middlemount Coking': {'symbol': 'MCBAP00', 'attributes': {}},
+    'Poitrel Semi Hard': {'symbol': 'MCBAQ00', 'attributes': {}}}
 
 Dry_bulk_freight_assessments = {
-'Australia-China-Capesize': {'symbol': 'CDANC00', 'attributes': {}},
-'Australia-Rotterdam-Capesize': {'symbol': 'CDARN00', 'attributes': {}},
-'Australia-China-Panamax': {'symbol': 'CDBFA00', 'attributes': {}},
-'Australia-India-Panamax': {'symbol': 'CDBFAI0', 'attributes': {}},
-'USEC-India-Panamax': {'symbol': 'CDBUI00', 'attributes': {}},
-'USEC-Rotterdam-Panamax': {'symbol': 'CDBUR00', 'attributes': {}},
-'USEC-Brazil-Panamax': {'symbol': 'CDBUB00', 'attributes': {}},
-'US Mobile-Rotterdam-Panamax': {'symbol': 'CDMAR00', 'attributes': {}}
+    'Australia-China-Capesize': {'symbol': 'CDANC00', 'attributes': {}},
+    'Australia-Rotterdam-Capesize': {'symbol': 'CDARN00', 'attributes': {}},
+    'Australia-China-Panamax': {'symbol': 'CDBFA00', 'attributes': {}},
+    'Australia-India-Panamax': {'symbol': 'CDBFAI0', 'attributes': {}},
+    'USEC-India-Panamax': {'symbol': 'CDBUI00', 'attributes': {}},
+    'USEC-Rotterdam-Panamax': {'symbol': 'CDBUR00', 'attributes': {}},
+    'USEC-Brazil-Panamax': {'symbol': 'CDBUB00', 'attributes': {}},
+    'US Mobile-Rotterdam-Panamax': {'symbol': 'CDMAR00', 'attributes': {}}
 }
 
 
@@ -430,62 +447,64 @@ df_Dry_bulk_freight_assessments = final_report(
 
 # List of data frames for exporting to excel file
 dataframe_dict = {
-'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
-'coking_coal': df_Asia_Pacific_coking_coal,
-'Premium_Coal': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
-'HCC_Coal': df_Asia_Pacific_brand_relativities_Low_Vol_HCC,
-'freight_assessments': df_Dry_bulk_freight_assessments}
+    'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
+    'coking_coal': df_Asia_Pacific_coking_coal,
+    'Premium_Coal': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
+    'HCC_Coal': df_Asia_Pacific_brand_relativities_Low_Vol_HCC,
+    'freight_assessments': df_Dry_bulk_freight_assessments}
 
 translate_dict = {
-'Price':'قیمت','Change':'تغییر','Change %':'درصد تغییر',
-'Fe':'آهن','moisture':'رطوبت','silica':'سیلیکا','alumina':'آلومینا','phosphorus':'فسفر','sulfur':'سولفور','CCS':'شاخص سختی',
-'IODEX 62% Fe CFR North China':'ریزدانه تحویل به چین','65% Fe CFR North China':'ریزدانه تحویل به چین',
-'58% Fe CFR North China':'ریزدانه تحویل به چین','Lump outright':'درشت دانه','Weekly CFR China 65% Fe':'گندله کوره تحویل به چین',
-'Daily CFR China 63% Fe spot fixed price assessment':'گندله کوره تحویل به چین',
-'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil':'گندله کوره تحویل بندر برزیل',
-'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)':'گندله اسفنجی','Pilbara Blend Fines (PBF) CFR Qingdao':'ریزدانه پیلبارا',
-'Brazilian Blend Fines (BRBF) CFR Qingdao':'بلند(ترکیب) ریزدانه برزیل',
-'Newman High Grade Fines (NHGF) CFR Qingdao':'گندله با کیفیت نیومن',
-'Mining Area C Fines (MACF) CFR Qingdao':'ریزدانه مک','Jimblebar Fines (JMBF) CFR Qingdao':'ریزدانه جیمبلبار',
-'57% Fe Yandi Fines (YDF) CFR Qingdao':'ریزدانه یاندی','HCC Peak Downs Region FOB Australia':'زغال سنگ متالورژی پیک داونز تحویل استرالیا',
-'HCC Peak Downs Region CFR China':'زغال سنگ متالورژی پیک داونز تحویل چین','HCC Peak Downs Region CFR India':'زغال سنگ متالورژی پیک داونز تحویل هند',
-'Premium Low Vol FOB Australia':'زغال متالورژی با کیفیت با مواد فرار کم تحویل به استرالیا','Premium Low Vol CFR China':'زغال متالورژی با کیفیت با مواد فرار کم تحویل به چین',
-'Premium Low Vol CFR India':'زغال متالورژی با کیفیت با مواد فرار کم تحویل به هند','Low Vol HCC FOB Australia':'زغال متالورژی استاندارد با مواد فرار کم تحویل به استرالیا',
-'Low Vol HCC CFR China':'زغال متالورژی استاندارد با مواد فرار کم تحویل به چین','Low Vol HCC CFR India':'زغال متالورژی استاندارد با مواد فرار کم تحویل به هند',
-'Low Vol PCI FOB Australia':'زغال سنگ خام مواد فرار کم تحویل به استرالیا','Low Vol PCI CFR China':'زغال سنگ خام مواد فرار کم تحویل به چین',
-'Low Vol PCI CFR India':'زغال سنگ خام مواد فرار کم تحویل به هند','Mid Vol PCI FOB Australia':'زغال سنگ خام مواد فرار متوسط تحویل به استرالیا',
-'Mid Vol PCI CFR China':'زغال سنگ خام مواد فرار متوسط تحویل به چین','Mid Vol PCI CFR India':'زغال سنگ خام مواد فرار متوسط تحویل به هند',
-'Semi Soft FOB Australia':'زغال سنگ کک نیمه نرم تحویل به استرالیا','Semi Soft CFR China':'زغال سنگ کک نیمه نرم تحویل به چین',
-'Semi Soft CFR India':'زغال سنگ کک نیمه نرم تحویل به هند','Peak Downs FOB Australia':'زغال سنگ مواد فرار کم پیک داونز تحویل به استرالیا',
-'Peak Downs CFR China':'زغال سنگ مواد فرار کم پیک داونز تحویل به چین','Saraji FOB Australia':'زغال سنگ مواد فرار کم سراجی تحویل به استرالیا',
-'Saraji CFR China':'زغال سنگ مواد فرار کم سراجی تحویل به چین','Oaky North FOB Australia':'زغال سنگ مواد فرار کم او کی نرث تحویل به استرالیا',
-'Oaky North CFR China':'زغال سنگ مواد فرار کم او کی نرث تحویل به چین','Illawarra FOB Australia':'زغال سنگ مواد فرار کم ایلاوارا تحویل به استرالیا',
-'Illawarra CFR China':'زغال سنگ مواد فرار کم ایلاوارا تحویل به استرالیا',
-'Moranbah North FOB Australia':'زغال سنگ مواد فرار کم مورانباه نرث تحویل به استرالیا' ,
-'Moranbah North CFR China': 'زغال سنگ مواد فرار کم مورانباه نرث تحویل به چین',
-'Goonyella FOB Australia': 'زغال سنگ مواد فرار کم گونیلا تحویل به استرالیا',
-'Goonyella CFR China': 'زغال سنگ مواد فرار کم گونیلا تحویل به چین',
-'Peak Downs North FOB Australia': 'زغال سنگ مواد فرار کم پیک داونز نرث تحویل به استرالیا',
-'Peak Downs North CFR China': 'زغال سنگ مواد فرار کم پیک داونز تحویل به چین',
-'Goonyella C FOB Australia': 'زغال سنگ مواد فرار کم گونیلا سی تحویل به استرالیا',
-'Goonyella C CFR China': 'زغال سنگ مواد فرار کم گونیلا سی تحویل به چین',
-'Riverside FOB Australia': 'زغال سنگ مواد فرار کم ریورساید تحویل به استرالیا',
-'Riverside CFR China': 'زغال سنگ مواد فرار کم ریورساید تحویل به چین',
-'GLV FOB Australia': 'زغال سنگ مواد فرار کم جی ال وی تحویل به استرالیا',
-'GLV CFR China':'زغال سنگ مواد فرار کم جی ال وی تحویل به چین',
-'Lake Vermont HCC':'زغال متالورژی مواد فرار کم لیک ورمانت',
-'Carborough Downs':'زغال متالورژی مواد فرار کم کابروگ داونز',
-'Middlemount Coking':'زغال متالورژی مواد فرار کم میدل مونت ککینگ',
-'Poitrel Semi Hard':'زغال نیمه سخت مواد فرار کم پیترل',
-'Australia-China-Capesize': 'استرالیا-چین کیپ سایز',
-'Australia-Rotterdam-Capesize': 'استرالیا-نتردام کیپ سایز',
-'Australia-China-Panamax': 'استرالیا-چین پانامکس',
-'Australia-India-Panamax': 'استرالیا-هند پانامکس',
-'USEC-India-Panamax': 'ساحل شرقی آمریکا-هند پانامکس',
-'USEC-Rotterdam-Panamax': 'ساحل شرقی آمریکا-رتردام پانامکس',
-'USEC-Brazil-Panamax': 'ساحل شرقی آمریکا-برزیل پانامکس',
-'US Mobile-Rotterdam-Panamax': 'آمریکا-رتردام پانامکس'
+    'Price': 'قیمت', 'Change': 'تغییر', 'Change %': 'درصد تغییر','Commodity':'کالا',
+    'Fe': 'آهن', 'moisture': 'رطوبت', 'silica': 'سیلیکا', 'alumina': 'آلومینا', 'phosphorus': 'فسفر', 'sulfur': 'سولفور', 'CCS': 'شاخص سختی',
+    'IODEX 62% Fe CFR North China': 'ریزدانه تحویل به چین', '65% Fe CFR North China': 'ریزدانه تحویل به چین',
+    '58% Fe CFR North China': 'ریزدانه تحویل به چین', 'Lump outright': 'درشت دانه', 'Weekly CFR China 65% Fe': 'گندله کوره تحویل به چین',
+    'Daily CFR China 63% Fe spot fixed price assessment': 'گندله کوره تحویل به چین',
+    'Atlantic Basin 65% Fe Blast Furnace pellet FOB Brazil': 'گندله کوره تحویل بندر برزیل',
+    'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)': 'گندله اسفنجی', 'Pilbara Blend Fines (PBF) CFR Qingdao': 'ریزدانه پیلبارا',
+    'Brazilian Blend Fines (BRBF) CFR Qingdao': 'بلند(ترکیب) ریزدانه برزیل',
+    'Newman High Grade Fines (NHGF) CFR Qingdao': 'گندله با کیفیت نیومن',
+    'Mining Area C Fines (MACF) CFR Qingdao': 'ریزدانه مک', 'Jimblebar Fines (JMBF) CFR Qingdao': 'ریزدانه جیمبلبار',
+    '57% Fe Yandi Fines (YDF) CFR Qingdao': 'ریزدانه یاندی', 'HCC Peak Downs Region FOB Australia': 'زغال سنگ متالورژی پیک داونز تحویل استرالیا',
+    'HCC Peak Downs Region CFR China': 'زغال سنگ متالورژی پیک داونز تحویل چین', 'HCC Peak Downs Region CFR India': 'زغال سنگ متالورژی پیک داونز تحویل هند',
+    'Premium Low Vol FOB Australia': 'زغال متالورژی با کیفیت با مواد فرار کم تحویل به استرالیا', 'Premium Low Vol CFR China': 'زغال متالورژی با کیفیت با مواد فرار کم تحویل به چین',
+    'Premium Low Vol CFR India': 'زغال متالورژی با کیفیت با مواد فرار کم تحویل به هند', 'Low Vol HCC FOB Australia': 'زغال متالورژی استاندارد با مواد فرار کم تحویل به استرالیا',
+    'Low Vol HCC CFR China': 'زغال متالورژی استاندارد با مواد فرار کم تحویل به چین', 'Low Vol HCC CFR India': 'زغال متالورژی استاندارد با مواد فرار کم تحویل به هند',
+    'Low Vol PCI FOB Australia': 'زغال سنگ خام مواد فرار کم تحویل به استرالیا', 'Low Vol PCI CFR China': 'زغال سنگ خام مواد فرار کم تحویل به چین',
+    'Low Vol PCI CFR India': 'زغال سنگ خام مواد فرار کم تحویل به هند', 'Mid Vol PCI FOB Australia': 'زغال سنگ خام مواد فرار متوسط تحویل به استرالیا',
+    'Mid Vol PCI CFR China': 'زغال سنگ خام مواد فرار متوسط تحویل به چین', 'Mid Vol PCI CFR India': 'زغال سنگ خام مواد فرار متوسط تحویل به هند',
+    'Semi Soft FOB Australia': 'زغال سنگ کک نیمه نرم تحویل به استرالیا', 'Semi Soft CFR China': 'زغال سنگ کک نیمه نرم تحویل به چین',
+    'Semi Soft CFR India': 'زغال سنگ کک نیمه نرم تحویل به هند', 'Peak Downs FOB Australia': 'زغال سنگ مواد فرار کم پیک داونز تحویل به استرالیا',
+    'Peak Downs CFR China': 'زغال سنگ مواد فرار کم پیک داونز تحویل به چین', 'Saraji FOB Australia': 'زغال سنگ مواد فرار کم سراجی تحویل به استرالیا',
+    'Saraji CFR China': 'زغال سنگ مواد فرار کم سراجی تحویل به چین', 'Oaky North FOB Australia': 'زغال سنگ مواد فرار کم او کی نرث تحویل به استرالیا',
+    'Oaky North CFR China': 'زغال سنگ مواد فرار کم او کی نرث تحویل به چین', 'Illawarra FOB Australia': 'زغال سنگ مواد فرار کم ایلاوارا تحویل به استرالیا',
+    'Illawarra CFR China': 'زغال سنگ مواد فرار کم ایلاوارا تحویل به استرالیا',
+    'Moranbah North FOB Australia': 'زغال سنگ مواد فرار کم مورانباه نرث تحویل به استرالیا',
+    'Moranbah North CFR China': 'زغال سنگ مواد فرار کم مورانباه نرث تحویل به چین',
+    'Goonyella FOB Australia': 'زغال سنگ مواد فرار کم گونیلا تحویل به استرالیا',
+    'Goonyella CFR China': 'زغال سنگ مواد فرار کم گونیلا تحویل به چین',
+    'Peak Downs North FOB Australia': 'زغال سنگ مواد فرار کم پیک داونز نرث تحویل به استرالیا',
+    'Peak Downs North CFR China': 'زغال سنگ مواد فرار کم پیک داونز تحویل به چین',
+    'Goonyella C FOB Australia': 'زغال سنگ مواد فرار کم گونیلا سی تحویل به استرالیا',
+    'Goonyella C CFR China': 'زغال سنگ مواد فرار کم گونیلا سی تحویل به چین',
+    'Riverside FOB Australia': 'زغال سنگ مواد فرار کم ریورساید تحویل به استرالیا',
+    'Riverside CFR China': 'زغال سنگ مواد فرار کم ریورساید تحویل به چین',
+    'GLV FOB Australia': 'زغال سنگ مواد فرار کم جی ال وی تحویل به استرالیا',
+    'GLV CFR China': 'زغال سنگ مواد فرار کم جی ال وی تحویل به چین',
+    'Lake Vermont HCC': 'زغال متالورژی مواد فرار کم لیک ورمانت',
+    'Carborough Downs': 'زغال متالورژی مواد فرار کم کابروگ داونز',
+    'Middlemount Coking': 'زغال متالورژی مواد فرار کم میدل مونت ککینگ',
+    'Poitrel Semi Hard': 'زغال نیمه سخت مواد فرار کم پیترل',
+    'Australia-China-Capesize': 'استرالیا-چین کیپ سایز',
+    'Australia-Rotterdam-Capesize': 'استرالیا-نتردام کیپ سایز',
+    'Australia-China-Panamax': 'استرالیا-چین پانامکس',
+    'Australia-India-Panamax': 'استرالیا-هند پانامکس',
+    'USEC-India-Panamax': 'ساحل شرقی آمریکا-هند پانامکس',
+    'USEC-Rotterdam-Panamax': 'ساحل شرقی آمریکا-رتردام پانامکس',
+    'USEC-Brazil-Panamax': 'ساحل شرقی آمریکا-برزیل پانامکس',
+    'US Mobile-Rotterdam-Panamax': 'آمریکا-رتردام پانامکس'
 }
+
+translate_report(df_indexes, translate_dict)
 
 excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
 export_to_excel(excel_file_address, dataframe_dict)
