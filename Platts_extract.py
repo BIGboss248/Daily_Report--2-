@@ -12,7 +12,7 @@ from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Fo
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
 
-def find_commodity_price_row(Platts_String: str, commodity_symbol: str, second_pattern='\s+\d+.+'):
+def find_commodity_price_row(Platts_String: str, commodity_symbol: str, second_pattern='\s+\d+.+')-> re.match:
     """ Finds the row corosponding to the commodity inside the daily report and returns a re.match"""
     # the pattern is based on the symbol so in the program what the  function will recive is the symbol
     # corosponding to the needed commodity
@@ -61,23 +61,18 @@ def extract_numbers(out_match: re.match, index: int) -> dict:
     return result
 
 
-def generate_report(Platts_String: str, commodity: dict, second_pattern='\s+\d+.+'):
-    """ taking the generated string from reading platts file and taking a list of required commodity information and Using
-    1-find_commodity_price_row 2-extract_numbers it generates a list of lists containing commodity name, price and changes """
-    result = []
-    for i in list(commodity.keys()):
-        numbers = extract_numbers(Platts_String, commodity[i], second_pattern)
-        numbers.insert(0, i)
-        result.append(numbers)
-    return (result)
-
-
 def final_report(Platts_String: str, commodity_dict: dict, needed_numbers: int,
                  second_pattern='\s+\d+.+') -> pd.DataFrame:
+    """ Gets the inputs for find_commodity_price_row and extract_numbers then using these functions returns a pandas dataframe
+        of the commodity price and attributes"""
+    #dataframe_index is used to create dataframes from the dictionaries and has no purpose other than that
     dataframe_index = 0
+    #The final dataframe created form the commodity_dict to publish
     complete_dataframe = pd.DataFrame()
     for commodity_name in list(commodity_dict.keys()):
+        #commodity_symbol is used to identify the relevent attributes for the commodity_name
         commodity_symbol = commodity_dict[commodity_name]['symbol']
+        #commodity_attributes_dict is the constructor dictionary for commodity_df
         commodity_attributes_dict = commodity_dict[commodity_name]['attributes']
         match = find_commodity_price_row(
             Platts_String, commodity_symbol, second_pattern)
@@ -91,10 +86,12 @@ def final_report(Platts_String: str, commodity_dict: dict, needed_numbers: int,
         if needed_numbers == 4:
             commodity_attributes_dict['Change'] = numbers['Change']
             commodity_attributes_dict['Change %'] = numbers['Change %']
+        #constructing df of the commodity_name to later add it to the complete_dataframe
         commodity_df = pd.DataFrame(
             commodity_attributes_dict, index=[dataframe_index])
         commodity_df.set_index('Commodity', inplace=True)
         complete_dataframe = pd.concat([complete_dataframe, commodity_df])
+        # adding 1 to dataframe index to ditinguish diffrent commodity_name rows
         dataframe_index = dataframe_index + 1
     return complete_dataframe
 
