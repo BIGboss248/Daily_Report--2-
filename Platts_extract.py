@@ -133,8 +133,8 @@ def get_Volume_Issue_Date(Platts_String: str) -> pd.DataFrame:
     day = int(match_string.split('/')[2].split(' ')[2].replace(',', ""))
     year = int(match_string.split('/')[2].split(' ')[3])
     df_english = pd.DataFrame({'Volume': [Volume], 'Issue': [Issue], 'Date': [f'{year}/{month_dict[month]}/{day}'],
-                              'Report_Properties':['Report_Properties']})
-    df_english.set_index('Report_Properties',inplace=True)
+                              'Translator':['Amin Jamali'],'Source':'spglobal.com'})
+    df_english.set_index(['Translator','Source'],inplace=True)
     return df_english
 
 
@@ -188,7 +188,7 @@ def excel_set_border(excel_file_address: str,
     wb.save(excel_file_address)
 
 
-def excel_set_tables(excel_file_address: str, Table_Style=TableStyleInfo(name="TableStyleMedium12")):
+def excel_set_tables(excel_file_address: str, Table_Style=TableStyleInfo(name="TableStyleMedium14")):
     """ Takes the address of an excel file and defines Tables with styles"""
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
@@ -247,7 +247,7 @@ def excel_set_column_width(excel_file_address: str):
                 row_len = len(str(ws[f'{column_letter}{row}'].value))
                 if row_len > max_width:
                     max_width = row_len
-            ws.column_dimensions[column_letter].width = max_width + 13
+            ws.column_dimensions[column_letter].width = max_width + 7
     wb.save(excel_file_address)
 
 
@@ -296,7 +296,7 @@ def excel_set_conditional_formatting(excel_file_address: str, rule_columns=['Cha
 def excel_format(excel_file_address: str, font=Font(name='IRNazanin', size=16), alignment=Alignment(horizontal='center', vertical='center'),
                  border=Border(left=Side(border_style="thin", color='000000'), right=Side(border_style="thin", color='000000'),
                                top=Side(border_style="thin", color='000000'), bottom=Side(border_style="thin", color='000000')),
-                 Table_Style=TableStyleInfo(name="TableStyleMedium12"), percentage_list=['Fe', 'silica', 'moisture', 'alumina', 'phosphorus', 'sulfur'],
+                 Table_Style=TableStyleInfo(name="TableStyleMedium14"), percentage_list=['Fe', 'silica', 'moisture', 'alumina', 'phosphorus', 'sulfur'],
                  currency_list=['Price', 'Change', 'Change %'], currency_format='"$"#,##0.00_-', percentage_format='0.00%',
                  rule_columns=['Change', 'Change %']):
     """ Takes the address of an excel file and Adjusts column width font and format alignment border and table style"""
@@ -465,6 +465,7 @@ dataframe_dict = {
     'freight_assessments': df_Dry_bulk_freight_assessments}
 
 translate_dict = {
+    'Translator':'مترجم','Amin Jamali':'امین جمالی','Source':'منبع','spglobal.com':'spglobal.com',
     'Price': 'قیمت', 'Change': 'تغییر', 'Change %': 'درصد تغییر', 'Commodity': 'کالا','Volume':'نسخه','Issue':'شماره گزارش','Year':'سال',
     'Month':'ماه','Day':'روز','Fe': 'آهن', 'moisture': 'رطوبت', 'silica': 'سیلیکا', 'alumina': 'آلومینا','Date':'تاریخ',
      'phosphorus': 'فسفر', 'sulfur': 'سولفور', 'CCS': 'شاخص سختی','Report_Properties':'مشخصات گزارش',
