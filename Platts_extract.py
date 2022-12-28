@@ -51,6 +51,11 @@ def extract_numbers(out_match: re.match, index: int) -> dict:
         in_list.remove('.')
     # turning the list of strings into float
     in_list = [float(x) for x in in_list]
+    if len(in_list) == 0:
+        in_list.append('-')
+        in_list.append('-')
+        in_list.append('-')
+
     if index == 2:
         result = {'Price': in_list[0]}
     if index == 3:
