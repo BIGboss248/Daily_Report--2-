@@ -113,12 +113,12 @@ def translate_report(dataframe: pd.DataFrame, persian_dict: dict):
     for i in range(len(dataframe.index)):
         translated = persian_dict[dataframe.index[i]]
         new_indexes[dataframe.index[i]] = translated
-    dataframe.rename(index=new_indexes,inplace=True)
+    dataframe.rename(index=new_indexes, inplace=True)
     return dataframe
 
 
-def get_Volume_Issue_Date(Platts_String: str):
-    """gets the file string returns a list first one will be the volume second the issue number and third a date object"""
+def get_Volume_Issue_Date(Platts_String: str) -> dict:
+    """gets the file string returns a dictionary first one will be the volume second the issue number and third a date object"""
     pattern = re.compile(r'Volume.+')
     match = re.search(pattern, Platts_String)
     match_string = match.group()
@@ -132,7 +132,7 @@ def get_Volume_Issue_Date(Platts_String: str):
     day = int(match_string.split('/')[2].split(' ')[2].replace(',', ""))
     year = int(match_string.split('/')[2].split(' ')[3])
     date_stamp = datetime.date(year, month_dict[month], day)
-    return [Volume, Issue, date_stamp]
+    return {'Volume': Volume, 'Issue': Issue, 'date_stamp': date_stamp}
 
 
 def export_to_excel(excel_file_address: str, dataframe_dict: dict):
@@ -248,7 +248,7 @@ def excel_set_column_width(excel_file_address: str):
     wb.save(excel_file_address)
 
 
-def excel_set_conditional_formatting(excel_file_address: str):
+def excel_set_conditional_formatting(excel_file_address: str,rule_columns=['Change', 'Change %']):
     red_color = 'ffc7ce'
     red_color_font = '9c0103'
     green_color = 'C6EFCE'
@@ -267,15 +267,11 @@ def excel_set_conditional_formatting(excel_file_address: str):
     wb = xl.load_workbook(excel_file_address)
     for sheet in wb.sheetnames:
         ws = wb[sheet]
-        change_column_num = 0
-        change_percent_column_num = 0
+        rules_column_nums = []
         for j in range(1, ws.max_column+1):
             selected_cell = ws.cell(row=1, column=j)
-            if selected_cell.value == 'Change':
-                change_column_num = j
-            if selected_cell.value == 'Change %':
-                change_percent_column_num = j
-        rules_column_nums = [change_column_num, change_percent_column_num]
+            if selected_cell.value in rule_columns:
+                rules_column_nums.append(j)
         for i in rules_column_nums:
             apply_range = rf"{string.ascii_uppercase[i-1]}2:{string.ascii_uppercase[i-1]}{ws.max_row}"
             # start from row 2 and column 2 to ignore headers and indexes
@@ -294,15 +290,21 @@ def excel_set_conditional_formatting(excel_file_address: str):
     wb.save(excel_file_address)
 
 
-def excel_format(excel_file_address: str):
+def excel_format(excel_file_address: str, font=Font(name='IRNazanin', size=16), alignment=Alignment(horizontal='center', vertical='center'),
+                 border=Border(left=Side(border_style="thin", color='000000'), right=Side(border_style="thin", color='000000'),
+                               top=Side(border_style="thin", color='000000'), bottom=Side(border_style="thin", color='000000')),
+                 Table_Style=TableStyleInfo(name="TableStyleMedium12"), percentage_list=['Fe', 'silica', 'moisture', 'alumina', 'phosphorus', 'sulfur'],
+                 currency_list=['Price', 'Change', 'Change %'], currency_format='"$"#,##0.00_-', percentage_format='0.00%',
+                 rule_columns=['Change', 'Change %']):
     """ Takes the address of an excel file and Adjusts column width font and format alignment border and table style"""
-    excel_set_font(excel_file_address)
-    excel_set_alignment(excel_file_address)
-    excel_set_border(excel_file_address)
-    excel_set_tables(excel_file_address)
-    excel_set_number_formats(excel_file_address)
+    excel_set_font(excel_file_address, font)
+    excel_set_alignment(excel_file_address, alignment)
+    excel_set_border(excel_file_address, border)
+    excel_set_tables(excel_file_address, Table_Style)
+    excel_set_number_formats(excel_file_address, percentage_list=percentage_list, currency_list=currency_list,
+                             currency_format=currency_format, percentage_format=percentage_format)
     excel_set_column_width(excel_file_address)
-    excel_set_conditional_formatting(excel_file_address)
+    excel_set_conditional_formatting(excel_file_address,rule_columns)
 
 
 # declare addresses
@@ -459,7 +461,7 @@ dataframe_dict = {
     'freight_assessments': df_Dry_bulk_freight_assessments}
 
 translate_dict = {
-    'Price': 'قیمت', 'Change': 'تغییر', 'Change %': 'درصد تغییر','Commodity':'کالا',
+    'Price': 'قیمت', 'Change': 'تغییر', 'Change %': 'درصد تغییر', 'Commodity': 'کالا',
     'Fe': 'آهن', 'moisture': 'رطوبت', 'silica': 'سیلیکا', 'alumina': 'آلومینا', 'phosphorus': 'فسفر', 'sulfur': 'سولفور', 'CCS': 'شاخص سختی',
     'IODEX 62% Fe CFR North China': 'ریزدانه تحویل به چین', '65% Fe CFR North China': 'ریزدانه تحویل به چین',
     '58% Fe CFR North China': 'ریزدانه تحویل به چین', 'Lump outright': 'درشت دانه', 'Weekly CFR China 65% Fe': 'گندله کوره تحویل به چین',
@@ -509,8 +511,20 @@ translate_dict = {
     'US Mobile-Rotterdam-Panamax': 'آمریکا-رتردام پانامکس'
 }
 
-translate_report(df_indexes, translate_dict)
 
-excel_file_address = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-V2.xlsx'
-export_to_excel(excel_file_address, dataframe_dict)
-excel_format(excel_file_address)
+excel_file_address_English = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-English.xlsx'
+export_to_excel(excel_file_address_English, dataframe_dict)
+excel_format(excel_file_address_English)
+
+for df_name in dataframe_dict:
+    dataframe = dataframe_dict[df_name]
+    translate_report(dataframe, translate_dict)
+
+rule_columns_persian = ['تغییر', 'درصد تغییر']
+currency_columns_persian = ['قیمت', 'تغییر', 'درصد تغییر']
+percentage_column_persian = ['آهن', 'رطوبت',
+                             'سیلیکا', 'آلومینا', 'فسفر', 'سولفور', 'شاخص سختی']
+
+excel_file_address_Persian = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-Persian.xlsx'
+export_to_excel(excel_file_address_Persian, dataframe_dict)
+excel_format(excel_file_address_Persian,percentage_list= percentage_column_persian, currency_list= currency_columns_persian,rule_columns=['تغییر','درصد تغییر'])
