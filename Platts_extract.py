@@ -102,19 +102,9 @@ def final_report(Platts_String: str, commodity_dict: dict, needed_numbers: int,
 
 
 def translate_report(dataframe: pd.DataFrame, persian_dict: dict, translate_index = True):
-    new_column_names = []
-    new_indexes = {}
-    for column_name in dataframe.columns:
-        persian_word = persian_dict[column_name]
-        new_column_names.append(persian_word)
-    dataframe.columns = new_column_names
-    if translate_index and dataframe.index.name !=None:
-        new_index = persian_dict[dataframe.index.name]
-        dataframe.index.name = new_index
-        for i in range(len(dataframe.index)):
-            translated = persian_dict[dataframe.index[i]]
-            new_indexes[dataframe.index[i]] = translated
-        dataframe.rename(index=new_indexes, inplace=True)
+    dataframe.rename(columns=persian_dict,index=persian_dict,inplace=True)
+    new_index = persian_dict[dataframe.index.name]
+    dataframe.index.name = new_index
     return dataframe
 
 
@@ -132,9 +122,9 @@ def get_Volume_Issue_Date(Platts_String: str) -> pd.DataFrame:
                   'November': 11, 'December': 12}
     day = int(match_string.split('/')[2].split(' ')[2].replace(',', ""))
     year = int(match_string.split('/')[2].split(' ')[3])
-    df_english = pd.DataFrame({'Volume': [Volume], 'Issue': [Issue], 'Date': [f'{year}/{month_dict[month]}/{day}'],
-                              'Translator':['Amin Jamali'],'Source':'spglobal.com'})
-    df_english.set_index(['Translator','Source'],inplace=True)
+    df_english = pd.DataFrame({'Source':'spglobal.com','Volume': [Volume], 'Issue': [Issue],'Persian_date':'',
+                               'Date': [f'{year}/{month_dict[month]}/{day}'],'Translator':['Amin Jamali']})
+    df_english.set_index('Translator',inplace=True)
     return df_english
 
 
@@ -465,7 +455,7 @@ dataframe_dict = {
     'freight_assessments': df_Dry_bulk_freight_assessments}
 
 translate_dict = {
-    'Translator':'مترجم','Amin Jamali':'امین جمالی','Source':'منبع','spglobal.com':'spglobal.com',
+    'Translator':'مترجم','Amin Jamali':'امین جمالی','Source':'منبع','spglobal.com':'spglobal.com','Persian_date':'تاریخ شمسی','':'',
     'Price': 'قیمت', 'Change': 'تغییر', 'Change %': 'درصد تغییر', 'Commodity': 'کالا','Volume':'نسخه','Issue':'شماره گزارش','Year':'سال',
     'Month':'ماه','Day':'روز','Fe': 'آهن', 'moisture': 'رطوبت', 'silica': 'سیلیکا', 'alumina': 'آلومینا','Date':'تاریخ',
      'phosphorus': 'فسفر', 'sulfur': 'سولفور', 'CCS': 'شاخص سختی','Report_Properties':'مشخصات گزارش',
