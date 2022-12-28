@@ -101,23 +101,24 @@ def final_report(Platts_String: str, commodity_dict: dict, needed_numbers: int,
     return complete_dataframe
 
 
-def translate_report(dataframe: pd.DataFrame, persian_dict: dict):
+def translate_report(dataframe: pd.DataFrame, persian_dict: dict, translate_index = True):
     new_column_names = []
     new_indexes = {}
     for column_name in dataframe.columns:
         persian_word = persian_dict[column_name]
         new_column_names.append(persian_word)
     dataframe.columns = new_column_names
-    new_index = persian_dict[dataframe.index.name]
-    dataframe.index.name = new_index
-    for i in range(len(dataframe.index)):
-        translated = persian_dict[dataframe.index[i]]
-        new_indexes[dataframe.index[i]] = translated
-    dataframe.rename(index=new_indexes, inplace=True)
+    if translate_index and dataframe.index.name !=None:
+        new_index = persian_dict[dataframe.index.name]
+        dataframe.index.name = new_index
+        for i in range(len(dataframe.index)):
+            translated = persian_dict[dataframe.index[i]]
+            new_indexes[dataframe.index[i]] = translated
+        dataframe.rename(index=new_indexes, inplace=True)
     return dataframe
 
 
-def get_Volume_Issue_Date(Platts_String: str) -> dict:
+def get_Volume_Issue_Date(Platts_String: str) -> pd.DataFrame:
     """gets the file string returns a dictionary first one will be the volume second the issue number and third a date object"""
     pattern = re.compile(r'Volume.+')
     match = re.search(pattern, Platts_String)
@@ -131,8 +132,10 @@ def get_Volume_Issue_Date(Platts_String: str) -> dict:
                   'November': 11, 'December': 12}
     day = int(match_string.split('/')[2].split(' ')[2].replace(',', ""))
     year = int(match_string.split('/')[2].split(' ')[3])
-    date_stamp = datetime.date(year, month_dict[month], day)
-    return {'Volume': Volume, 'Issue': Issue, 'date_stamp': date_stamp}
+    df_english = pd.DataFrame({'Volume': [Volume], 'Issue': [Issue], 'Date': [f'{year}/{month_dict[month]}/{day}'],
+                              'Report_Properties':['Report_Properties']})
+    df_english.set_index('Report_Properties',inplace=True)
+    return df_english
 
 
 def export_to_excel(excel_file_address: str, dataframe_dict: dict):
@@ -248,7 +251,7 @@ def excel_set_column_width(excel_file_address: str):
     wb.save(excel_file_address)
 
 
-def excel_set_conditional_formatting(excel_file_address: str,rule_columns=['Change', 'Change %']):
+def excel_set_conditional_formatting(excel_file_address: str, rule_columns=['Change', 'Change %']):
     red_color = 'ffc7ce'
     red_color_font = '9c0103'
     green_color = 'C6EFCE'
@@ -304,7 +307,7 @@ def excel_format(excel_file_address: str, font=Font(name='IRNazanin', size=16), 
     excel_set_number_formats(excel_file_address, percentage_list=percentage_list, currency_list=currency_list,
                              currency_format=currency_format, percentage_format=percentage_format)
     excel_set_column_width(excel_file_address)
-    excel_set_conditional_formatting(excel_file_address,rule_columns)
+    excel_set_conditional_formatting(excel_file_address, rule_columns)
 
 
 # declare addresses
@@ -425,7 +428,7 @@ Dry_bulk_freight_assessments = {
     'USEC-Brazil-Panamax': {'symbol': 'CDBUB00', 'attributes': {}},
     'US Mobile-Rotterdam-Panamax': {'symbol': 'CDMAR00', 'attributes': {}}
 }
-
+df_time = get_Volume_Issue_Date(Platts_Daily_Report_String)
 
 df_indexes = final_report(Platts_Daily_Report_String, indexes, 4)
 
@@ -454,6 +457,7 @@ df_Dry_bulk_freight_assessments = final_report(
 
 # List of data frames for exporting to excel file
 dataframe_dict = {
+    'Time':df_time,
     'indexes': df_indexes, 'lump': df_lump, 'pellet': df_pellet, 'ore_brands': df_ore_brands,
     'coking_coal': df_Asia_Pacific_coking_coal,
     'Premium_Coal': df_Asia_Pacific_brand_relativities_Premium_Low_Vol,
@@ -461,8 +465,9 @@ dataframe_dict = {
     'freight_assessments': df_Dry_bulk_freight_assessments}
 
 translate_dict = {
-    'Price': 'قیمت', 'Change': 'تغییر', 'Change %': 'درصد تغییر', 'Commodity': 'کالا',
-    'Fe': 'آهن', 'moisture': 'رطوبت', 'silica': 'سیلیکا', 'alumina': 'آلومینا', 'phosphorus': 'فسفر', 'sulfur': 'سولفور', 'CCS': 'شاخص سختی',
+    'Price': 'قیمت', 'Change': 'تغییر', 'Change %': 'درصد تغییر', 'Commodity': 'کالا','Volume':'نسخه','Issue':'شماره گزارش','Year':'سال',
+    'Month':'ماه','Day':'روز','Fe': 'آهن', 'moisture': 'رطوبت', 'silica': 'سیلیکا', 'alumina': 'آلومینا','Date':'تاریخ',
+     'phosphorus': 'فسفر', 'sulfur': 'سولفور', 'CCS': 'شاخص سختی','Report_Properties':'مشخصات گزارش',
     'IODEX 62% Fe CFR North China': 'ریزدانه تحویل به چین', '65% Fe CFR North China': 'ریزدانه تحویل به چین',
     '58% Fe CFR North China': 'ریزدانه تحویل به چین', 'Lump outright': 'درشت دانه', 'Weekly CFR China 65% Fe': 'گندله کوره تحویل به چین',
     'Daily CFR China 63% Fe spot fixed price assessment': 'گندله کوره تحویل به چین',
@@ -527,4 +532,5 @@ percentage_column_persian = ['آهن', 'رطوبت',
 
 excel_file_address_Persian = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-Persian.xlsx'
 export_to_excel(excel_file_address_Persian, dataframe_dict)
-excel_format(excel_file_address_Persian,percentage_list= percentage_column_persian, currency_list= currency_columns_persian,rule_columns=['تغییر','درصد تغییر'])
+excel_format(excel_file_address_Persian, percentage_list=percentage_column_persian,
+             currency_list=currency_columns_persian, rule_columns=['تغییر', 'درصد تغییر'])
