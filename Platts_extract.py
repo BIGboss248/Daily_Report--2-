@@ -445,6 +445,7 @@ df_Asia_Pacific_brand_relativities_Low_Vol_HCC = final_report(
 df_Dry_bulk_freight_assessments = final_report(
     Platts_Daily_Report_String, Dry_bulk_freight_assessments, 3, second_pattern='.+')
 
+print('Dataframes created')
 # List of data frames for exporting to excel file
 dataframe_dict = {
     'Time':df_time,
@@ -511,6 +512,7 @@ translate_dict = {
 excel_file_address_English = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-English.xlsx'
 export_to_excel(excel_file_address_English, dataframe_dict)
 excel_format(excel_file_address_English)
+print('English report created')
 
 for df_name in dataframe_dict:
     dataframe = dataframe_dict[df_name]
@@ -525,3 +527,4 @@ excel_file_address_Persian = r'G:\Shared drives\Unlimited Drive\Global trading\P
 export_to_excel(excel_file_address_Persian, dataframe_dict)
 excel_format(excel_file_address_Persian, percentage_list=percentage_column_persian,
              currency_list=currency_columns_persian, rule_columns=['تغییر', 'درصد تغییر'])
+print('Persian reprot created')
