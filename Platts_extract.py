@@ -30,7 +30,8 @@ def extract_numbers(out_match: re.match, index: int) -> dict:
     # extracting the string from re,match and turning it into a list of strings
     in_list = out_match.group().split(" ")
     # removing the space betwean the numbers and name and symbol
-    in_list = list(dict.fromkeys(in_list))
+    while (" " in in_list):
+        in_list.remove(" ")
     # creating a list of items that should be removed from the original re.match string
     remove_list = []
     for i in in_list:
