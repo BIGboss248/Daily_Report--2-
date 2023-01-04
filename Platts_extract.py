@@ -27,6 +27,16 @@ def extract_numbers(out_match: re.match, index: int) -> dict:
     removes the name symbol and spaces of the row and retruns a dictionary contaning the info"""
     # creating a list of english letters to remove the name and symbol
     alphabet = list(string.ascii_letters)
+    if out_match == None:
+        if index == 2:
+            result = {'Price': "-"}
+        if index == 3:
+            result = {'Price': "-", 'Change': "-"}
+        if index == 4:
+            result = {'Price': "-",
+                  'Change': "-", 'Change %': "-"}
+        return result
+
     # extracting the string from re,match and turning it into a list of strings
     in_list = out_match.group().split(" ")
     # removing the space betwean the numbers and name and symbol
