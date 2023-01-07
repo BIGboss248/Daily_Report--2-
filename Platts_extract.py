@@ -312,7 +312,10 @@ def excel_format(excel_file_address: str, font=Font(name='IRNazanin', size=16), 
 
 
 # declare addresses
-Platts_file_full_address = r'G:\Shared drives\Unlimited Drive\Scripts\Daily_Report (2)\Resources\Platts-text.txt'
+current_directory = os.getcwd()
+Platts_file_full_address = current_directory + "\Daily_Report (2)\Resources\Platts-text.txt"
+excel_file_address_English = current_directory + "\Daily_Report (2)\Resources\Platts-Data-English.xlsx"
+excel_file_address_Persian = current_directory + "\Daily_Report (2)\Resources\Platts-Data-Persian.xlsx"
 
 # Open Platts file
 Platts_Daily_Report_File = open(
@@ -520,10 +523,10 @@ translate_dict = {
 }
 
 
-excel_file_address_English = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-English.xlsx'
+
 export_to_excel(excel_file_address_English, dataframe_dict)
 excel_format(excel_file_address_English)
-print('English report created')
+print(f'English report created in {excel_file_address_English}')
 
 for df_name in dataframe_dict:
     dataframe = dataframe_dict[df_name]
@@ -534,8 +537,8 @@ currency_columns_persian = ['قیمت', 'تغییر', 'درصد تغییر']
 percentage_column_persian = ['آهن', 'رطوبت',
                              'سیلیکا', 'آلومینا', 'فسفر', 'سولفور', 'شاخص سختی']
 
-excel_file_address_Persian = r'G:\Shared drives\Unlimited Drive\Global trading\Platts-Daily-Report\Platts-Data-Persian.xlsx'
+
 export_to_excel(excel_file_address_Persian, dataframe_dict)
 excel_format(excel_file_address_Persian, percentage_list=percentage_column_persian,
              currency_list=currency_columns_persian, rule_columns=['تغییر', 'درصد تغییر'])
-print('Persian reprot created')
+print(f'Persian reprot created in {excel_file_address_Persian}')
