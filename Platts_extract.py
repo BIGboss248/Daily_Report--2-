@@ -1,7 +1,6 @@
 import re
 import os
 import datetime
-from datetime import date
 import string
 import tkinter
 from tkinter import filedialog
@@ -133,8 +132,9 @@ def get_Volume_Issue_Date(Platts_String: str) -> pd.DataFrame:
                   'November': 11, 'December': 12}
     day = int(match_string.split('/')[2].split(' ')[2].replace(',', ""))
     year = int(match_string.split('/')[2].split(' ')[3])
+    platts_date = datetime.date(year,month_dict[month],day)
     df_english = pd.DataFrame({'Source':'spglobal.com','Volume': [Volume], 'Issue': [Issue],'Persian_date':'',
-                               'Date': [f'{year}/{month_dict[month]}/{day}'],'Translator':['Amin Jamali']})
+                               'Date': platts_date,'Translator':['Amin Jamali']})
     df_english.set_index('Translator',inplace=True)
     return df_english
 
@@ -523,6 +523,7 @@ translate_dict = {
 }
 
 
+out_date = datetime.date.today() - df_time['Date']['Amin Jamali']
 
 export_to_excel(excel_file_address_English, dataframe_dict)
 excel_format(excel_file_address_English)
@@ -542,3 +543,10 @@ export_to_excel(excel_file_address_Persian, dataframe_dict)
 excel_format(excel_file_address_Persian, percentage_list=percentage_column_persian,
              currency_list=currency_columns_persian, rule_columns=['تغییر', 'درصد تغییر'])
 print(f'Persian reprot created in {excel_file_address_Persian}')
+print(f"="*50)
+
+if (out_date.days) < 2:
+    print('validated')
+else:
+    print(f'its outdated by {out_date.days} days')
+input('press enter to exit')
