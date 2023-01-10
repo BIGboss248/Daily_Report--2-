@@ -472,7 +472,7 @@ dataframe_dict = {
 translate_dict = {
     'Translator':'مترجم','Amin Jamali':'امین جمالی','Source':'منبع','spglobal.com':'spglobal.com','Persian_date':'تاریخ شمسی','':'',
     'Price': 'قیمت', 'Change': 'تغییر', 'Change %': 'درصد تغییر', 'Commodity': 'کالا','Volume':'نسخه','Issue':'شماره گزارش','Year':'سال',
-    'Month':'ماه','Day':'روز','Fe': 'آهن', 'moisture': 'رطوبت', 'silica': 'سیلیکا', 'alumina': 'آلومینا','Date':'تاریخ',
+    'Month':'ماه','Day':'روز','Fe': 'آهن', 'moisture': 'رطوبت', 'silica': 'سیلیکا', 'alumina': 'آلومینا','Date':'تاریخ نشر مجله پلتس',
      'phosphorus': 'فسفر', 'sulfur': 'سولفور', 'CCS': 'شاخص سختی','Report_Properties':'مشخصات گزارش',
     'IODEX 62% Fe CFR North China': 'ریزدانه تحویل به چین', '65% Fe CFR North China': 'ریزدانه تحویل به چین',
     '58% Fe CFR North China': 'ریزدانه تحویل به چین', 'Lump outright': 'درشت دانه', 'Weekly CFR China 65% Fe': 'گندله کوره تحویل به چین',
