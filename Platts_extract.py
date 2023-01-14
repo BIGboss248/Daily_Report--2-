@@ -313,9 +313,9 @@ def excel_format(excel_file_address: str, font=Font(name='IRNazanin', size=16), 
 
 # declare addresses
 current_directory = os.getcwd()
-Platts_file_full_address = current_directory + "\Daily_Report (2)\Resources\Platts-text.txt"
-excel_file_address_English = current_directory + "\Daily_Report (2)\Resources\Platts-Data-English.xlsx"
-excel_file_address_Persian = current_directory + "\Daily_Report (2)\Resources\Platts-Data-Persian.xlsx"
+Platts_file_full_address = current_directory + "\Resources\Platts-text.txt"
+excel_file_address_English = current_directory + "\Resources\Platts-Data-English.xlsx"
+excel_file_address_Persian = current_directory + "\Resources\Platts-Data-Persian.xlsx"
 
 # Open Platts file
 Platts_Daily_Report_File = open(
