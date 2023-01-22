@@ -441,9 +441,9 @@ df_lump = final_report(Platts_Daily_Report_String, lump, 3)
 df_pellet = final_report(Platts_Daily_Report_String, pellet, 3)
 # Adding the IODEX Price to Premiums
 df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] = df_pellet.loc['Weekly CFR China 65% Fe', 'Price'] + \
-    df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
+    df_indexes.loc['65% Fe CFR North China', 'Price']
 df_pellet.loc['Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] = df_pellet.loc[
-    'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['IODEX 62% Fe CFR North China', 'Price']
+    'Direct Reduction 67.5% Fe pellet premium (65% Fe basis)', 'Price'] + df_indexes.loc['65% Fe CFR North China', 'Price']
 
 df_ore_brands = final_report(Platts_Daily_Report_String, ore_brands, 3)
 
