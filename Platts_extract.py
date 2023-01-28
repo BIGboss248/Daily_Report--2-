@@ -201,8 +201,8 @@ def excel_set_tables(excel_file_address: str, Table_Style=TableStyleInfo(name="T
     wb.save(excel_file_address)
 
 
-def excel_set_number_formats(excel_file_address: str, percentage_list=['Fe', 'silica', 'moisture', 'alumina', 'phosphorus', 'sulfur'],
-                             currency_list=['Price', 'Change', 'Change %'], currency_format='"$"#,##0.00_-', percentage_format='0.00%'):
+def excel_set_number_formats(excel_file_address: str, percentage_list=['Fe', 'silica', 'moisture', 'alumina', 'phosphorus', 'sulfur','Change %'],
+                             currency_list=['Price', 'Change'], currency_format='"$"#,##0.00_-', percentage_format='0.00%'):
     """ Gets excel file address and two lists containing  the header names of the values that should be formatted as a percentage
         or currency the default format for currency is dolor it searches each sheet for the header and if the item in the list is 
         not in the sheet function simply ignores it and moves to the next sheet"""
@@ -297,8 +297,8 @@ def excel_set_conditional_formatting(excel_file_address: str, rule_columns=['Cha
 def excel_format(excel_file_address: str, font=Font(name='IRNazanin', size=16), alignment=Alignment(horizontal='center', vertical='center'),
                  border=Border(left=Side(border_style="thin", color='000000'), right=Side(border_style="thin", color='000000'),
                                top=Side(border_style="thin", color='000000'), bottom=Side(border_style="thin", color='000000')),
-                 Table_Style=TableStyleInfo(name="TableStyleMedium14"), percentage_list=['Fe', 'silica', 'moisture', 'alumina', 'phosphorus', 'sulfur'],
-                 currency_list=['Price', 'Change', 'Change %'], currency_format='"$"#,##0.00_-', percentage_format='0.00%',
+                 Table_Style=TableStyleInfo(name="TableStyleMedium14"), percentage_list=['Change %','Fe', 'silica', 'moisture', 'alumina', 'phosphorus', 'sulfur'],
+                 currency_list=['Price', 'Change'], currency_format='"$"#,##0.00_-', percentage_format='0.00%',
                  rule_columns=['Change', 'Change %']):
     """ Takes the address of an excel file and Adjusts column width font and format alignment border and table style"""
     excel_set_font(excel_file_address, font)
@@ -534,8 +534,8 @@ for df_name in dataframe_dict:
     translate_report(dataframe, translate_dict)
 
 rule_columns_persian = ['تغییر', 'درصد تغییر']
-currency_columns_persian = ['قیمت', 'تغییر', 'درصد تغییر']
-percentage_column_persian = ['آهن', 'رطوبت',
+currency_columns_persian = ['قیمت', 'تغییر']
+percentage_column_persian = ['درصد تغییر','آهن', 'رطوبت',
                              'سیلیکا', 'آلومینا', 'فسفر', 'سولفور', 'شاخص سختی']
 
 
