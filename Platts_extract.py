@@ -59,6 +59,8 @@ def extract_numbers(out_match: re.match, index: int) -> dict:
     # in special cases there will be a '.' that will cause error so we check for it and  delete it if its there
     if '.' in in_list:
         in_list.remove('.')
+    if 'NA' in in_list:
+        in_list.remove('NA')
     # turning the list of strings into float
     in_list = [float(x) for x in in_list]
     if len(in_list) == 0:
